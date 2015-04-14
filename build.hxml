@@ -1,0 +1,5 @@
+-js bin/ledge.js
+-main Main
+-cp src
+-lib edge
+-lib edge-pixi
