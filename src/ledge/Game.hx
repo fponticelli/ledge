@@ -36,15 +36,21 @@ class Game {
     world.start();
   }
 
-  public function addEnitities() {
-		var display = edge.pixi.components.DisplaySprite.fromImagePath("assets/paladin.png");
-		display.sprite.scale.set(0.25, 0.25);
+  function createWarrior(x : Float, y : Float) {
+    var display = edge.pixi.components.DisplaySprite.fromImagePath("assets/paladin.png");
+    display.sprite.scale.set(0.25, 0.25);
     display.sprite.anchor.set(0.5, 0.5);
     var p = engine.create([
         display,
-				new Selectable(50),
-        new Position(200, 200)
+        new Selectable(50),
+        new Position(x, y)
       ]);
+  }
+
+  public function addEnitities() {
+    createWarrior(100, 100);
+    createWarrior(500, 200);
+    createWarrior(300, 500);
   }
 
   public function addSystems() {

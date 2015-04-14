@@ -1198,11 +1198,16 @@ var ledge_Game = function(renderer) {
 };
 ledge_Game.__name__ = ["ledge","Game"];
 ledge_Game.prototype = {
-	addEnitities: function() {
+	createWarrior: function(x,y) {
 		var display = edge_pixi_components_DisplaySprite.fromImagePath("assets/paladin.png");
 		display.sprite.scale.set(0.25,0.25);
 		display.sprite.anchor.set(0.5,0.5);
-		var p = this.engine.create([display,new ledge_components_Selectable(50),new edge_pixi_components_Position(200,200)]);
+		var p = this.engine.create([display,new ledge_components_Selectable(50),new edge_pixi_components_Position(x,y)]);
+	}
+	,addEnitities: function() {
+		this.createWarrior(100,100);
+		this.createWarrior(500,200);
+		this.createWarrior(300,500);
 	}
 	,addSystems: function() {
 		this.physics.add(new ledge_systems_MouseSelectSystem(this.stage,ledge_components_Selected.instance));
@@ -1251,6 +1256,7 @@ ledge_systems_MouseSelectSystem.prototype = $extend(edge_pixi_cosystems_MouseSys
 		var dy = this.y - position.y;
 		if(selectable.radius * selectable.radius < dx * dx + dy * dy) return;
 		if(null != this.selected.entity) this.selected.entity.remove(this.selected);
+		this.selected.entity = this.entity;
 		this.entity.add(this.selected);
 	}
 	,toString: function() {

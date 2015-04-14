@@ -23,6 +23,7 @@ class MouseSelectSystem implements edge.ISystem extends edge.pixi.cosystems.Mous
       return;
     if(null != selected.entity)
       selected.entity.remove(selected);
+    selected.entity = entity;
     entity.add(selected);
   }
 }
