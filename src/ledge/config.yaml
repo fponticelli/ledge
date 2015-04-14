@@ -1,0 +1,5 @@
+stage:
+  width: 800
+  height: 600
+  background: 0xBADA55
+  resolution: 1

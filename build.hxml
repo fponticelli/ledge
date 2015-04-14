@@ -1,5 +1,7 @@
 -js bin/ledge.js
 -main Main
 -cp src
+-lib thx.core
 -lib edge
 -lib edge-pixi
+-lib yaml
