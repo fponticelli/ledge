@@ -1160,6 +1160,9 @@ var ledge_Game = function(renderer) {
 ledge_Game.__name__ = ["ledge","Game"];
 ledge_Game.prototype = {
 	addEnitities: function() {
+		var display = edge_pixi_components_DisplaySprite.fromImagePath("assets/paladin.png");
+		display.sprite.scale.set(0.25,0.25);
+		var p = this.engine.create([display,new ledge_components_Selectable()]);
 	}
 	,addSystems: function() {
 		this.physics.add(new edge_pixi_systems_UpdatePositionVelocity());
@@ -1169,6 +1172,16 @@ ledge_Game.prototype = {
 		this.render.add(this.renderer);
 	}
 	,__class__: ledge_Game
+};
+var ledge_components_Selectable = function() {
+};
+ledge_components_Selectable.__name__ = ["ledge","components","Selectable"];
+ledge_components_Selectable.__interfaces__ = [edge_IComponent];
+ledge_components_Selectable.prototype = {
+	toString: function() {
+		return "Selectable()";
+	}
+	,__class__: ledge_components_Selectable
 };
 var thx_core_Arrays = function() { };
 thx_core_Arrays.__name__ = ["thx","core","Arrays"];

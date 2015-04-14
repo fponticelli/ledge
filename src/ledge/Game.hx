@@ -6,7 +6,9 @@ import edge.World;
 import pixi.core.display.Container;
 import pixi.core.renderers.SystemRenderer;
 import edge.pixi.components.*;
+import ledge.components.*;
 import edge.pixi.systems.*;
+import ledge.systems.*;
 
 class Game {
   var world : World;
@@ -35,8 +37,11 @@ class Game {
   }
 
   public function addEnitities() {
+		var display = edge.pixi.components.DisplaySprite.fromImagePath("assets/paladin.png");
+		display.sprite.scale.set(0.25, 0.25);
     var p = engine.create([
-        edge.pixi.components.DisplaySprite.fromImagePath("assets/player.png")
+        display,
+				new Selectable()
       ]);
   }
 
