@@ -39,14 +39,17 @@ class Game {
   public function addEnitities() {
 		var display = edge.pixi.components.DisplaySprite.fromImagePath("assets/paladin.png");
 		display.sprite.scale.set(0.25, 0.25);
+    display.sprite.anchor.set(0.5, 0.5);
     var p = engine.create([
         display,
-				new Selectable()
+				new Selectable(50),
+        new Position(200, 200)
       ]);
   }
 
   public function addSystems() {
     // interaction
+    physics.add(new MouseSelectSystem(stage, Selected.instance));
 
     // physics
     physics.add(new UpdatePositionVelocity());
@@ -55,6 +58,7 @@ class Game {
     // rendering systems
     render.add(new UpdatePosition());
     render.add(new UpdateRotation());
+    render.add(new RenderSelected(stage));
     render.add(renderer);
   }
 }
