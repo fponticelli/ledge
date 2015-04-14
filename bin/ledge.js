@@ -108,7 +108,8 @@ HxOverrides.iter = function(a) {
 var Main = function() { };
 Main.__name__ = ["Main"];
 Main.main = function() {
-	var options = { resolution : ledge_Config.stage.resolution, backgroundColor : ledge_Config.stage.background};
+	ledge_Config.stage.resolution = window.devicePixelRatio;
+	var options = { antialias : ledge_Config.stage.antialias, autoResize : ledge_Config.stage.autoResize, resolution : ledge_Config.stage.resolution, backgroundColor : ledge_Config.stage.background};
 	var renderer = PIXI.autoDetectRenderer(ledge_Config.stage.width,ledge_Config.stage.height,options);
 	window.document.body.appendChild(renderer.view);
 	new ledge_Game(renderer);
@@ -607,6 +608,41 @@ edge_pixi_components_RotationVelocity.prototype = {
 		return "RotationVelocity(dangle=$dangle)";
 	}
 	,__class__: edge_pixi_components_RotationVelocity
+};
+var edge_pixi_cosystems_MouseSystem = function(stage) {
+	this.stage = stage;
+	this.stage.interactive = true;
+	this.x = this.y = this.lx = this.ly = this.dx = this.dy = 0;
+	this.isDown = false;
+	this.firstDown = false;
+	window.document.addEventListener("mousedown",$bind(this,this.mouseDown));
+	window.document.addEventListener("mouseup",$bind(this,this.mouseUp));
+	this.stage.on("mousemove",$bind(this,this.mouseMove));
+};
+edge_pixi_cosystems_MouseSystem.__name__ = ["edge","pixi","cosystems","MouseSystem"];
+edge_pixi_cosystems_MouseSystem.prototype = {
+	before: function() {
+		this.dx = this.x - this.lx;
+		this.dy = this.y - this.ly;
+	}
+	,after: function() {
+		this.firstDown = false;
+		this.lx = this.x;
+		this.ly = this.y;
+	}
+	,mouseMove: function(e) {
+		var pt = e.data.global;
+		this.x = pt.x;
+		this.y = pt.y;
+	}
+	,mouseDown: function(_) {
+		this.isDown = true;
+		this.firstDown = true;
+	}
+	,mouseUp: function(_) {
+		this.isDown = false;
+	}
+	,__class__: edge_pixi_cosystems_MouseSystem
 };
 var edge_pixi_systems_Renderer = function(renderer,stage) {
 	if(null != stage) this.stage = stage; else this.stage = new PIXI.Container();
@@ -1162,26 +1198,178 @@ ledge_Game.prototype = {
 	addEnitities: function() {
 		var display = edge_pixi_components_DisplaySprite.fromImagePath("assets/paladin.png");
 		display.sprite.scale.set(0.25,0.25);
-		var p = this.engine.create([display,new ledge_components_Selectable()]);
+		display.sprite.anchor.set(0.5,0.5);
+		var p = this.engine.create([display,new ledge_components_Selectable(50),new edge_pixi_components_Position(200,200)]);
 	}
 	,addSystems: function() {
+		this.physics.add(new ledge_systems_MouseSelectSystem(this.stage,ledge_components_Selected.instance));
 		this.physics.add(new edge_pixi_systems_UpdatePositionVelocity());
 		this.physics.add(new edge_pixi_systems_UpdateRotationVelocity());
 		this.render.add(new edge_pixi_systems_UpdatePosition());
 		this.render.add(new edge_pixi_systems_UpdateRotation());
+		this.render.add(new ledge_systems_RenderSelected(this.stage));
 		this.render.add(this.renderer);
 	}
 	,__class__: ledge_Game
 };
-var ledge_components_Selectable = function() {
+var ledge_components_Selectable = function(radius) {
+	this.radius = radius;
 };
 ledge_components_Selectable.__name__ = ["ledge","components","Selectable"];
 ledge_components_Selectable.__interfaces__ = [edge_IComponent];
 ledge_components_Selectable.prototype = {
-	toString: function() {
-		return "Selectable()";
+	toString: function(radius) {
+		return "Selectable(radius=$radius)";
 	}
 	,__class__: ledge_components_Selectable
+};
+var ledge_components_Selected = function() {
+};
+ledge_components_Selected.__name__ = ["ledge","components","Selected"];
+ledge_components_Selected.__interfaces__ = [edge_IComponent];
+ledge_components_Selected.prototype = {
+	toString: function(entity) {
+		return "Selected(entity=$entity)";
+	}
+	,__class__: ledge_components_Selected
+};
+var ledge_systems_MouseSelectSystem = function(stage,selected) {
+	edge_pixi_cosystems_MouseSystem.call(this,stage);
+	this.selected = selected;
+	this.__process__ = new ledge_systems_MouseSelectSystem_$SystemProcess(this);
+};
+ledge_systems_MouseSelectSystem.__name__ = ["ledge","systems","MouseSelectSystem"];
+ledge_systems_MouseSelectSystem.__interfaces__ = [edge_ISystem];
+ledge_systems_MouseSelectSystem.__super__ = edge_pixi_cosystems_MouseSystem;
+ledge_systems_MouseSelectSystem.prototype = $extend(edge_pixi_cosystems_MouseSystem.prototype,{
+	update: function(selectable,position) {
+		if(!this.firstDown) return;
+		var dx = this.x - position.x;
+		var dy = this.y - position.y;
+		if(selectable.radius * selectable.radius < dx * dx + dy * dy) return;
+		if(null != this.selected.entity) this.selected.entity.remove(this.selected);
+		this.entity.add(this.selected);
+	}
+	,toString: function() {
+		return "ledge.systems.MouseSelectSystem";
+	}
+	,__class__: ledge_systems_MouseSelectSystem
+});
+var ledge_systems_MouseSelectSystem_$SystemProcess = function(system) {
+	this.system = system;
+	this.updateItems = new edge_View();
+};
+ledge_systems_MouseSelectSystem_$SystemProcess.__name__ = ["ledge","systems","MouseSelectSystem_SystemProcess"];
+ledge_systems_MouseSelectSystem_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
+ledge_systems_MouseSelectSystem_$SystemProcess.prototype = {
+	removeEntity: function(entity) {
+		this.updateItems.tryRemove(entity);
+	}
+	,addEntity: function(entity) {
+		this.updateMatchRequirements(entity);
+	}
+	,update: function(engine,delta) {
+		if(this.updateItems.count > 0) this.system.before();
+		var data;
+		var $it0 = this.updateItems.iterator();
+		while( $it0.hasNext() ) {
+			var item = $it0.next();
+			this.system.entity = item.entity;
+			data = item.data;
+			this.system.update(data.selectable,data.position);
+		}
+		this.system.after();
+	}
+	,updateMatchRequirements: function(entity) {
+		var removed = this.updateItems.tryRemove(entity);
+		var count = 2;
+		var o = { selectable : null, position : null};
+		var $it0 = entity.map.iterator();
+		while( $it0.hasNext() ) {
+			var component = $it0.next();
+			if(js_Boot.__instanceof(component,ledge_components_Selectable)) {
+				o.selectable = component;
+				if(--count == 0) break; else continue;
+			}
+			if(js_Boot.__instanceof(component,edge_pixi_components_Position)) {
+				o.position = component;
+				if(--count == 0) break; else continue;
+			}
+		}
+		var added = count == 0 && this.updateItems.tryAdd(entity,o);
+	}
+	,__class__: ledge_systems_MouseSelectSystem_$SystemProcess
+};
+var ledge_systems_RenderSelected = function(stage) {
+	this.g = new PIXI.Graphics();
+	stage.addChild(this.g);
+	this.r = 0;
+	this.__process__ = new ledge_systems_RenderSelected_$SystemProcess(this);
+};
+ledge_systems_RenderSelected.__name__ = ["ledge","systems","RenderSelected"];
+ledge_systems_RenderSelected.__interfaces__ = [edge_ISystem];
+ledge_systems_RenderSelected.prototype = {
+	update: function(selected,selectable,position) {
+		if(selectable.radius != this.r) {
+			this.r = selectable.radius;
+			this.g.clear();
+			this.g.lineStyle(4,10040064,0.8);
+			this.g.beginFill(16737843,0.5);
+			this.g.drawCircle(0,0,this.r);
+			this.g.endFill();
+		}
+		this.g.position.set(position.x,position.y);
+	}
+	,toString: function() {
+		return "ledge.systems.RenderSelected";
+	}
+	,__class__: ledge_systems_RenderSelected
+};
+var ledge_systems_RenderSelected_$SystemProcess = function(system) {
+	this.system = system;
+	this.updateItems = new edge_View();
+};
+ledge_systems_RenderSelected_$SystemProcess.__name__ = ["ledge","systems","RenderSelected_SystemProcess"];
+ledge_systems_RenderSelected_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
+ledge_systems_RenderSelected_$SystemProcess.prototype = {
+	removeEntity: function(entity) {
+		this.updateItems.tryRemove(entity);
+	}
+	,addEntity: function(entity) {
+		this.updateMatchRequirements(entity);
+	}
+	,update: function(engine,delta) {
+		var data;
+		var $it0 = this.updateItems.iterator();
+		while( $it0.hasNext() ) {
+			var item = $it0.next();
+			data = item.data;
+			this.system.update(data.selected,data.selectable,data.position);
+		}
+	}
+	,updateMatchRequirements: function(entity) {
+		var removed = this.updateItems.tryRemove(entity);
+		var count = 3;
+		var o = { selected : null, selectable : null, position : null};
+		var $it0 = entity.map.iterator();
+		while( $it0.hasNext() ) {
+			var component = $it0.next();
+			if(js_Boot.__instanceof(component,ledge_components_Selected)) {
+				o.selected = component;
+				if(--count == 0) break; else continue;
+			}
+			if(js_Boot.__instanceof(component,ledge_components_Selectable)) {
+				o.selectable = component;
+				if(--count == 0) break; else continue;
+			}
+			if(js_Boot.__instanceof(component,edge_pixi_components_Position)) {
+				o.position = component;
+				if(--count == 0) break; else continue;
+			}
+		}
+		var added = count == 0 && this.updateItems.tryAdd(entity,o);
+	}
+	,__class__: ledge_systems_RenderSelected_$SystemProcess
 };
 var thx_core_Arrays = function() { };
 thx_core_Arrays.__name__ = ["thx","core","Arrays"];
@@ -2394,7 +2582,8 @@ if(typeof(scope.performance.now) == "undefined") {
 }
 haxe_ds_ObjectMap.count = 0;
 js_Boot.__toStr = {}.toString;
-ledge_Config.stage = { background : 12245589, height : 600, resolution : 1, width : 800};
+ledge_Config.stage = { background : 12245589, height : 600, antialias : true, autoResize : true, resolution : 1., width : 800};
+ledge_components_Selected.instance = new ledge_components_Selected();
 thx_core_Ints.pattern_parse = new EReg("^[+-]?(\\d+|0x[0-9A-F]+)$","i");
 thx_core_Ints.BASE = "0123456789abcdefghijklmnopqrstuvwxyz";
 thx_core_Strings.UCWORDS = new EReg("[^a-zA-Z]([a-z])","g");

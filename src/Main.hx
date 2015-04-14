@@ -5,7 +5,11 @@ import js.Browser;
 
 class Main {
   static function main() {
+		Config.stage.resolution = js.Browser.window.devicePixelRatio;
+
     var options : RenderingOptions = {
+						antialias : Config.stage.antialias,
+						autoResize : Config.stage.autoResize,
             resolution : Config.stage.resolution,
             backgroundColor : Config.stage.background
           },
