@@ -1146,18 +1146,25 @@ ledge_Config.__name__ = ["ledge","Config"];
 ledge_Config.__interfaces__ = [thx_core_StaticResource];
 var ledge_Game = function(renderer) {
 	this.world = new edge_World();
-	var rendererSystem = new edge_pixi_systems_Renderer(renderer);
-	this.stage = rendererSystem.stage;
-	this.world.physics.add(new edge_pixi_systems_UpdatePositionVelocity());
-	this.world.physics.add(new edge_pixi_systems_UpdateRotationVelocity());
-	this.world.render.add(new edge_pixi_systems_UpdatePosition());
-	this.world.render.add(new edge_pixi_systems_UpdateRotation());
-	this.world.render.add(rendererSystem);
+	this.turn = this.world.engine.createPhase();
+	this.physics = this.world.physics;
+	this.render = this.world.render;
+	this.frame = this.world.frame;
+	this.renderer = new edge_pixi_systems_Renderer(renderer);
+	this.stage = this.renderer.stage;
+	this.addSystems();
 	this.world.start();
 };
 ledge_Game.__name__ = ["ledge","Game"];
 ledge_Game.prototype = {
-	__class__: ledge_Game
+	addSystems: function() {
+		this.physics.add(new edge_pixi_systems_UpdatePositionVelocity());
+		this.physics.add(new edge_pixi_systems_UpdateRotationVelocity());
+		this.render.add(new edge_pixi_systems_UpdatePosition());
+		this.render.add(new edge_pixi_systems_UpdateRotation());
+		this.render.add(this.renderer);
+	}
+	,__class__: ledge_Game
 };
 var thx_core_Arrays = function() { };
 thx_core_Arrays.__name__ = ["thx","core","Arrays"];
