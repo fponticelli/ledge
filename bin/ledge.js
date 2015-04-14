@@ -108,7 +108,7 @@ HxOverrides.iter = function(a) {
 var Main = function() { };
 Main.__name__ = ["Main"];
 Main.main = function() {
-	ledge_Config.stage.resolution = window.devicePixelRatio;
+	ledge_Config.init();
 	var options = { antialias : ledge_Config.stage.antialias, autoResize : ledge_Config.stage.autoResize, resolution : ledge_Config.stage.resolution, backgroundColor : ledge_Config.stage.background};
 	var renderer = PIXI.autoDetectRenderer(ledge_Config.stage.width,ledge_Config.stage.height,options);
 	window.document.body.appendChild(renderer.view);
@@ -1180,6 +1180,9 @@ thx_core_StaticResource.__name__ = ["thx","core","StaticResource"];
 var ledge_Config = function() { };
 ledge_Config.__name__ = ["ledge","Config"];
 ledge_Config.__interfaces__ = [thx_core_StaticResource];
+ledge_Config.init = function() {
+	ledge_Config.stage.resolution = window.devicePixelRatio;
+};
 var ledge_Game = function(renderer) {
 	this.world = new edge_World();
 	this.engine = this.world.engine;
