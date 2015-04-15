@@ -1202,7 +1202,7 @@ ledge_Game.prototype = {
 		var display = edge_pixi_components_DisplaySprite.fromImagePath("assets/paladin.png");
 		display.sprite.scale.set(0.25,0.25);
 		display.sprite.anchor.set(0.5,0.5);
-		var p = this.engine.create([display,new ledge_components_Selectable(50),new edge_pixi_components_Position(x,y)]);
+		var p = this.engine.create([display,new ledge_components_Selectable(50),new edge_pixi_components_Position(x,y),new ledge_components_Waypoints()]);
 	}
 	,addEnitities: function() {
 		this.createWarrior(100,100);
@@ -1210,12 +1210,14 @@ ledge_Game.prototype = {
 		this.createWarrior(300,500);
 	}
 	,addSystems: function() {
+		this.physics.add(new ledge_systems_MousePathSystem(this.stage));
 		this.physics.add(new ledge_systems_MouseSelectSystem(this.stage,ledge_components_Selected.instance));
 		this.physics.add(new edge_pixi_systems_UpdatePositionVelocity());
 		this.physics.add(new edge_pixi_systems_UpdateRotationVelocity());
 		this.render.add(new edge_pixi_systems_UpdatePosition());
 		this.render.add(new edge_pixi_systems_UpdateRotation());
 		this.render.add(new ledge_systems_RenderSelected(this.stage));
+		this.render.add(new ledge_systems_RenderWaypoints(this.stage));
 		this.render.add(this.renderer);
 	}
 	,__class__: ledge_Game
@@ -1240,6 +1242,78 @@ ledge_components_Selected.prototype = {
 		return "Selected(entity=$entity)";
 	}
 	,__class__: ledge_components_Selected
+};
+var ledge_components_Waypoints = function() {
+	this.path = [];
+};
+ledge_components_Waypoints.__name__ = ["ledge","components","Waypoints"];
+ledge_components_Waypoints.__interfaces__ = [edge_IComponent];
+ledge_components_Waypoints.prototype = {
+	toString: function(path) {
+		return "Waypoints(path=$path)";
+	}
+	,__class__: ledge_components_Waypoints
+};
+var ledge_systems_MousePathSystem = function(stage) {
+	edge_pixi_cosystems_MouseSystem.call(this,stage);
+	this.__process__ = new ledge_systems_MousePathSystem_$SystemProcess(this);
+};
+ledge_systems_MousePathSystem.__name__ = ["ledge","systems","MousePathSystem"];
+ledge_systems_MousePathSystem.__interfaces__ = [edge_ISystem];
+ledge_systems_MousePathSystem.__super__ = edge_pixi_cosystems_MouseSystem;
+ledge_systems_MousePathSystem.prototype = $extend(edge_pixi_cosystems_MouseSystem.prototype,{
+	update: function(waypoints,selected) {
+		if(!this.firstDown) return;
+		waypoints.path.push(new PIXI.Point(this.x,this.y));
+	}
+	,toString: function() {
+		return "ledge.systems.MousePathSystem";
+	}
+	,__class__: ledge_systems_MousePathSystem
+});
+var ledge_systems_MousePathSystem_$SystemProcess = function(system) {
+	this.system = system;
+	this.updateItems = new edge_View();
+};
+ledge_systems_MousePathSystem_$SystemProcess.__name__ = ["ledge","systems","MousePathSystem_SystemProcess"];
+ledge_systems_MousePathSystem_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
+ledge_systems_MousePathSystem_$SystemProcess.prototype = {
+	removeEntity: function(entity) {
+		this.updateItems.tryRemove(entity);
+	}
+	,addEntity: function(entity) {
+		this.updateMatchRequirements(entity);
+	}
+	,update: function(engine,delta) {
+		if(this.updateItems.count > 0) this.system.before();
+		var data;
+		var $it0 = this.updateItems.iterator();
+		while( $it0.hasNext() ) {
+			var item = $it0.next();
+			data = item.data;
+			this.system.update(data.waypoints,data.selected);
+		}
+		this.system.after();
+	}
+	,updateMatchRequirements: function(entity) {
+		var removed = this.updateItems.tryRemove(entity);
+		var count = 2;
+		var o = { waypoints : null, selected : null};
+		var $it0 = entity.map.iterator();
+		while( $it0.hasNext() ) {
+			var component = $it0.next();
+			if(js_Boot.__instanceof(component,ledge_components_Waypoints)) {
+				o.waypoints = component;
+				if(--count == 0) break; else continue;
+			}
+			if(js_Boot.__instanceof(component,ledge_components_Selected)) {
+				o.selected = component;
+				if(--count == 0) break; else continue;
+			}
+		}
+		var added = count == 0 && this.updateItems.tryAdd(entity,o);
+	}
+	,__class__: ledge_systems_MousePathSystem_$SystemProcess
 };
 var ledge_systems_MouseSelectSystem = function(stage,selected) {
 	edge_pixi_cosystems_MouseSystem.call(this,stage);
@@ -1379,6 +1453,88 @@ ledge_systems_RenderSelected_$SystemProcess.prototype = {
 		var added = count == 0 && this.updateItems.tryAdd(entity,o);
 	}
 	,__class__: ledge_systems_RenderSelected_$SystemProcess
+};
+var ledge_systems_RenderWaypoints = function(stage) {
+	this.g = new PIXI.Graphics();
+	stage.addChild(this.g);
+	this.r = 0;
+	this.__process__ = new ledge_systems_RenderWaypoints_$SystemProcess(this);
+};
+ledge_systems_RenderWaypoints.__name__ = ["ledge","systems","RenderWaypoints"];
+ledge_systems_RenderWaypoints.__interfaces__ = [edge_ISystem];
+ledge_systems_RenderWaypoints.prototype = {
+	update: function(selected,waypoints,position) {
+		var p1_x = position.x;
+		var p1_y = position.y;
+		this.g.clear();
+		this.g.lineStyle(5,10053171);
+		this.g.moveTo(p1_x,p1_y);
+		var _g = 0;
+		var _g1 = waypoints.path;
+		while(_g < _g1.length) {
+			var p2 = _g1[_g];
+			++_g;
+			this.g.lineTo(p2.x,p2.y);
+		}
+		this.g.beginFill(6723976);
+		var _g2 = 0;
+		var _g11 = waypoints.path;
+		while(_g2 < _g11.length) {
+			var p21 = _g11[_g2];
+			++_g2;
+			this.g.drawCircle(p21.x,p21.y,8);
+		}
+	}
+	,toString: function() {
+		return "ledge.systems.RenderWaypoints";
+	}
+	,__class__: ledge_systems_RenderWaypoints
+};
+var ledge_systems_RenderWaypoints_$SystemProcess = function(system) {
+	this.system = system;
+	this.updateItems = new edge_View();
+};
+ledge_systems_RenderWaypoints_$SystemProcess.__name__ = ["ledge","systems","RenderWaypoints_SystemProcess"];
+ledge_systems_RenderWaypoints_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
+ledge_systems_RenderWaypoints_$SystemProcess.prototype = {
+	removeEntity: function(entity) {
+		this.updateItems.tryRemove(entity);
+	}
+	,addEntity: function(entity) {
+		this.updateMatchRequirements(entity);
+	}
+	,update: function(engine,delta) {
+		var data;
+		var $it0 = this.updateItems.iterator();
+		while( $it0.hasNext() ) {
+			var item = $it0.next();
+			data = item.data;
+			this.system.update(data.selected,data.waypoints,data.position);
+		}
+	}
+	,updateMatchRequirements: function(entity) {
+		var removed = this.updateItems.tryRemove(entity);
+		var count = 3;
+		var o = { selected : null, waypoints : null, position : null};
+		var $it0 = entity.map.iterator();
+		while( $it0.hasNext() ) {
+			var component = $it0.next();
+			if(js_Boot.__instanceof(component,ledge_components_Selected)) {
+				o.selected = component;
+				if(--count == 0) break; else continue;
+			}
+			if(js_Boot.__instanceof(component,ledge_components_Waypoints)) {
+				o.waypoints = component;
+				if(--count == 0) break; else continue;
+			}
+			if(js_Boot.__instanceof(component,edge_pixi_components_Position)) {
+				o.position = component;
+				if(--count == 0) break; else continue;
+			}
+		}
+		var added = count == 0 && this.updateItems.tryAdd(entity,o);
+	}
+	,__class__: ledge_systems_RenderWaypoints_$SystemProcess
 };
 var thx_core_Arrays = function() { };
 thx_core_Arrays.__name__ = ["thx","core","Arrays"];

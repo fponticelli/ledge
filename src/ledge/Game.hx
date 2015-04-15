@@ -43,7 +43,8 @@ class Game {
     var p = engine.create([
         display,
         new Selectable(50),
-        new Position(x, y)
+        new Position(x, y),
+        new Waypoints()
       ]);
   }
 
@@ -55,6 +56,7 @@ class Game {
 
   public function addSystems() {
     // interaction
+    physics.add(new MousePathSystem(stage));
     physics.add(new MouseSelectSystem(stage, Selected.instance));
 
     // physics
@@ -65,6 +67,7 @@ class Game {
     render.add(new UpdatePosition());
     render.add(new UpdateRotation());
     render.add(new RenderSelected(stage));
+    render.add(new RenderWaypoints(stage));
     render.add(renderer);
   }
 }
