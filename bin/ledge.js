@@ -557,44 +557,41 @@ edge_core_NodeSystemIterator.prototype = {
 	}
 	,__class__: edge_core_NodeSystemIterator
 };
-var edge_pixi_components_DisplaySprite = function(sprite) {
-	this.sprite = sprite;
+var edge_pixi_components_Display = function(node) {
+	this.node = node;
 };
-edge_pixi_components_DisplaySprite.__name__ = ["edge","pixi","components","DisplaySprite"];
-edge_pixi_components_DisplaySprite.__interfaces__ = [edge_IComponent];
-edge_pixi_components_DisplaySprite.fromImagePath = function(path) {
-	return new edge_pixi_components_DisplaySprite(new PIXI.Sprite(PIXI.Texture.fromImage(path)));
+edge_pixi_components_Display.__name__ = ["edge","pixi","components","Display"];
+edge_pixi_components_Display.__interfaces__ = [edge_IComponent];
+edge_pixi_components_Display.fromImagePath = function(path,anchorx,anchory) {
+	if(anchory == null) anchory = 0.0;
+	if(anchorx == null) anchorx = 0.0;
+	var sprite = new PIXI.Sprite(PIXI.Texture.fromImage(path));
+	sprite.anchor.x = anchorx;
+	sprite.anchor.y = anchory;
+	return new edge_pixi_components_Display(sprite);
 };
-edge_pixi_components_DisplaySprite.prototype = {
-	toString: function(sprite) {
-		return "DisplaySprite(sprite=$sprite)";
+edge_pixi_components_Display.prototype = {
+	toString: function(node) {
+		return "Display(node=$node)";
 	}
-	,__class__: edge_pixi_components_DisplaySprite
+	,__class__: edge_pixi_components_Display
 };
 var edge_pixi_components_Position = function(x,y) {
-	this.x = x;
-	this.y = y;
+	PIXI.Point.call(this,x,y);
 };
 edge_pixi_components_Position.__name__ = ["edge","pixi","components","Position"];
-edge_pixi_components_Position.__interfaces__ = [edge_IComponent];
-edge_pixi_components_Position.prototype = {
-	toString: function(x,y) {
-		return "Position(x=$x,y=$y)";
-	}
-	,__class__: edge_pixi_components_Position
-};
-var edge_pixi_components_PositionVelocity = function(dx,dy) {
-	this.dx = dx;
-	this.dy = dy;
+edge_pixi_components_Position.__super__ = PIXI.Point;
+edge_pixi_components_Position.prototype = $extend(PIXI.Point.prototype,{
+	__class__: edge_pixi_components_Position
+});
+var edge_pixi_components_PositionVelocity = function(x,y) {
+	PIXI.Point.call(this,x,y);
 };
 edge_pixi_components_PositionVelocity.__name__ = ["edge","pixi","components","PositionVelocity"];
-edge_pixi_components_PositionVelocity.__interfaces__ = [edge_IComponent];
-edge_pixi_components_PositionVelocity.prototype = {
-	toString: function(dx,dy) {
-		return "PositionVelocity(dx=$dx,dy=$dy)";
-	}
-	,__class__: edge_pixi_components_PositionVelocity
-};
+edge_pixi_components_PositionVelocity.__super__ = PIXI.Point;
+edge_pixi_components_PositionVelocity.prototype = $extend(PIXI.Point.prototype,{
+	__class__: edge_pixi_components_PositionVelocity
+});
 var edge_pixi_components_Rotation = function(angle) {
 	this.angle = angle;
 };
@@ -661,10 +658,10 @@ edge_pixi_systems_Renderer.__name__ = ["edge","pixi","systems","Renderer"];
 edge_pixi_systems_Renderer.__interfaces__ = [edge_ISystem];
 edge_pixi_systems_Renderer.prototype = {
 	entitiesAdded: function(e,data) {
-		this.stage.addChild(data.d.sprite);
+		this.stage.addChild(data.d.node);
 	}
 	,entitiesRemoved: function(e,data) {
-		this.stage.removeChild(data.d.sprite);
+		this.stage.removeChild(data.d.node);
 	}
 	,update: function() {
 		this.renderer.render(this.stage);
@@ -701,7 +698,7 @@ edge_pixi_systems_Renderer_$SystemProcess.prototype = {
 		var $it0 = entity.map.iterator();
 		while( $it0.hasNext() ) {
 			var component = $it0.next();
-			if(js_Boot.__instanceof(component,edge_pixi_components_DisplaySprite)) {
+			if(js_Boot.__instanceof(component,edge_pixi_components_Display)) {
 				o.d = component;
 				if(--count == 0) break; else continue;
 			}
@@ -719,8 +716,8 @@ edge_pixi_systems_UpdatePosition.__name__ = ["edge","pixi","systems","UpdatePosi
 edge_pixi_systems_UpdatePosition.__interfaces__ = [edge_ISystem];
 edge_pixi_systems_UpdatePosition.prototype = {
 	update: function(d,p) {
-		d.sprite.x = p.x;
-		d.sprite.y = p.y;
+		d.node.x = p.x;
+		d.node.y = p.y;
 		return true;
 	}
 	,toString: function() {
@@ -735,8 +732,8 @@ edge_pixi_systems_UpdatePositionVelocity.__name__ = ["edge","pixi","systems","Up
 edge_pixi_systems_UpdatePositionVelocity.__interfaces__ = [edge_ISystem];
 edge_pixi_systems_UpdatePositionVelocity.prototype = {
 	update: function(r,rs) {
-		r.x += rs.dx;
-		r.y += rs.dy;
+		r.x += rs.x;
+		r.y += rs.y;
 		return true;
 	}
 	,toString: function() {
@@ -821,7 +818,7 @@ edge_pixi_systems_UpdatePosition_$SystemProcess.prototype = {
 		var $it0 = entity.map.iterator();
 		while( $it0.hasNext() ) {
 			var component = $it0.next();
-			if(js_Boot.__instanceof(component,edge_pixi_components_DisplaySprite)) {
+			if(js_Boot.__instanceof(component,edge_pixi_components_Display)) {
 				o.d = component;
 				if(--count == 0) break; else continue;
 			}
@@ -841,7 +838,7 @@ edge_pixi_systems_UpdateRotation.__name__ = ["edge","pixi","systems","UpdateRota
 edge_pixi_systems_UpdateRotation.__interfaces__ = [edge_ISystem];
 edge_pixi_systems_UpdateRotation.prototype = {
 	update: function(d,r) {
-		d.sprite.rotation = r.angle;
+		d.node.rotation = r.angle;
 		return true;
 	}
 	,toString: function() {
@@ -941,7 +938,7 @@ edge_pixi_systems_UpdateRotation_$SystemProcess.prototype = {
 		var $it0 = entity.map.iterator();
 		while( $it0.hasNext() ) {
 			var component = $it0.next();
-			if(js_Boot.__instanceof(component,edge_pixi_components_DisplaySprite)) {
+			if(js_Boot.__instanceof(component,edge_pixi_components_Display)) {
 				o.d = component;
 				if(--count == 0) break; else continue;
 			}
@@ -1226,9 +1223,7 @@ var ledge_Game = function(renderer) {
 ledge_Game.__name__ = ["ledge","Game"];
 ledge_Game.prototype = {
 	createWarrior: function(x,y) {
-		var display = edge_pixi_components_DisplaySprite.fromImagePath("assets/paladin.png");
-		display.sprite.scale.set(0.25,0.25);
-		display.sprite.anchor.set(0.5,0.5);
+		var display = edge_pixi_components_Display.fromImagePath("assets/paladin.png",0.5,0.5);
 		var p = this.engine.create([display,new ledge_components_Selectable(50),new edge_pixi_components_Position(x,y),new ledge_components_Waypoints()]);
 	}
 	,addEnitities: function() {

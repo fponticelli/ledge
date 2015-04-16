@@ -37,9 +37,7 @@ class Game {
   }
 
   function createWarrior(x : Float, y : Float) {
-    var display = edge.pixi.components.DisplaySprite.fromImagePath("assets/paladin.png");
-    display.sprite.scale.set(0.25, 0.25);
-    display.sprite.anchor.set(0.5, 0.5);
+    var display = edge.pixi.components.Display.fromImagePath("assets/paladin.png", 0.5, 0.5);
     var p = engine.create([
         display,
         new Selectable(50),
