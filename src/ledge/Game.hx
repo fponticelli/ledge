@@ -56,8 +56,9 @@ class Game {
 
   public function addSystems() {
     // interaction
-    physics.add(new MousePathSystem(stage));
-    physics.add(new MouseSelectSystem(stage, Selected.instance));
+    var mouse = frame.createPhase();
+    mouse.add(new MouseSelectSystem(stage, Selected.instance));
+    mouse.add(new MousePathSystem(stage));
 
     // physics
     physics.add(new UpdatePositionVelocity());

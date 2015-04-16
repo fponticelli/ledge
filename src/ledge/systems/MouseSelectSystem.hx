@@ -16,14 +16,16 @@ class MouseSelectSystem implements edge.ISystem extends edge.pixi.cosystems.Mous
 
   function update(selectable : Selectable, position : Position) {
     if(!firstDown)
-      return;
+      return false;
     var dx = x - position.x,
         dy = y - position.y;
-    if(selectable.radius * selectable.radius < dx * dx + dy * dy)
-      return;
+    if(selectable.radius * selectable.radius < dx * dx + dy * dy) {
+      return true;
+    }
     if(null != selected.entity)
       selected.entity.remove(selected);
     selected.entity = entity;
     entity.add(selected);
+    return false;
   }
 }
