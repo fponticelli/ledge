@@ -2,6 +2,7 @@
 -main Main
 -cp src
 -lib thx.core
+-lib thx.color
 -lib edge
 -lib edge-pixi
 -lib yaml
