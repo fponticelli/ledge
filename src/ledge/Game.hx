@@ -37,11 +37,10 @@ class Game {
   }
 
   function createWarrior(x : Float, y : Float) {
-    var display = edge.pixi.components.Display.fromImagePath("assets/paladin.png", 0.5, 0.5);
+    var head = Structure.ball(x, y, 20, new nape.phys.Material(0.8, 1.0, 1.4, 1.5, 0.01));
     var p = engine.create([
-        display,
-        new Selectable(50),
-        new Position(x, y),
+        head,
+        new Selectable(30),
         new Waypoints()
       ]);
   }
@@ -60,12 +59,8 @@ class Game {
 
     // physics
     render.add(new PhysicsSpace());
-    //physics.add(new UpdatePositionVelocity());
-    //physics.add(new UpdateRotationVelocity());
 
     // rendering systems
-    //render.add(new UpdatePosition());
-    //render.add(new UpdateRotation());
     render.add(new RenderSelected(stage));
     render.add(new PhysicsDisplayUpdate());
     render.add(new PhysicsDebugRenderer(stage));

@@ -2,7 +2,7 @@ package ledge.systems;
 
 import ledge.components.Selectable;
 import ledge.components.Selected;
-import edge.pixi.components.Position;
+import ledge.components.Structure;
 import pixi.core.graphics.Graphics;
 import pixi.core.display.Container;
 
@@ -15,7 +15,7 @@ class RenderSelected implements edge.ISystem {
     r = 0;
   }
 
-  function update(selected : Selected, selectable : Selectable, position : Position) {
+  function update(selected : Selected, selectable : Selectable, structure : Structure) {
     if(selectable.radius != r) {
       r = selectable.radius;
       g.clear();
@@ -24,6 +24,6 @@ class RenderSelected implements edge.ISystem {
       g.drawCircle(0, 0, r);
       g.endFill();
     }
-    g.position.set(position.x, position.y);
+    g.position.set(structure.body.position.x, structure.body.position.y);
   }
 }

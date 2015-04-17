@@ -2,7 +2,7 @@ package ledge.systems;
 
 import ledge.components.Waypoints;
 import ledge.components.Selected;
-import edge.pixi.components.Position;
+import ledge.components.Structure;
 import pixi.core.graphics.Graphics;
 import pixi.core.display.Container;
 
@@ -15,8 +15,8 @@ class RenderWaypoints implements edge.ISystem {
     r = 0;
   }
 
-  function update(selected : Selected, waypoints : Waypoints, position : Position) {
-    var p1 = { x : position.x, y : position.y };
+  function update(selected : Selected, waypoints : Waypoints, structure : Structure) {
+    var p1 = { x : structure.body.position.x, y : structure.body.position.y };
     g.clear();
     g.lineStyle(5, 0x996633);
     g.moveTo(p1.x, p1.y);

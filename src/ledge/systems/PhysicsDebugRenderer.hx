@@ -21,8 +21,8 @@ class PhysicsDebugRenderer implements ISystem {
     var g = new Graphics();
     map.set(entity, g);
     stage.addChild(g);
-    var color = HSL.create(Math.random() * 360, 0.6, 0.5).toRGB();
-    g.lineStyle(1, color, 0.75);
+    var color = HSL.create(Math.random() * 360, 0.9, 0.3).toRGB();
+    g.lineStyle(3, color, 0.75);
     data.structure.shapes.pluck(render(g, _));
   }
 

@@ -7,9 +7,8 @@ import pixi.core.math.Point;
 import edge.Entity;
 
 class MousePathSystem implements edge.ISystem extends edge.pixi.cosystems.MouseSystem {
-  public function new(stage : Container) {
+  public function new(stage : Container)
     super(stage);
-  }
 
   function update(waypoints : Waypoints, selected : Selected) {
     if(!firstDown)
