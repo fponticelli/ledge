@@ -65,6 +65,7 @@ class Game {
     // rendering systems
     render.add(new UpdatePosition());
     render.add(new UpdateRotation());
+    render.add(new PhysicsDisplayUpdate());
     render.add(new RenderSelected(stage));
     render.add(new RenderWaypoints(stage));
     render.add(renderer);
