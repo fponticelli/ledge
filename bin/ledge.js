@@ -1116,9 +1116,9 @@ var ledge_Game = function(renderer) {
 ledge_Game.__name__ = ["ledge","Game"];
 ledge_Game.prototype = {
 	createWarrior: function(x,y) {
-		var head = new ledge_components_Structure([new nape_shape_Circle(20),new nape_shape_Circle(12,new nape_geom_Vec2(0,-20)),new nape_shape_Circle(12,new nape_geom_Vec2(0,20))],new nape_phys_Material(0.8,1.0,1.4,1.5,0.01));
+		var head = new ledge_components_Structure([new nape_shape_Circle(12,new nape_geom_Vec2(0,-20)),new nape_shape_Circle(12,new nape_geom_Vec2(0,20)),new nape_shape_Circle(16)],new nape_phys_Material(0.8,1.0,1.4,1.5,0.01));
 		head.body.get_position().setxy(x,y);
-		var p = this.engine.create([head,new ledge_components_Selectable(30),new ledge_components_Waypoints()]);
+		var p = this.engine.create([head,new ledge_components_Selectable(40),new ledge_components_Waypoints()]);
 	}
 	,createButton: function(x,y,label,handler) {
 		var text = new PIXI.Text(label);
@@ -1150,10 +1150,10 @@ ledge_Game.prototype = {
 		mouse.add(new ledge_systems_MousePathSystem(this.stage));
 		var realtime = this.physics.createPhase();
 		realtime.add(new ledge_systems_PhysicsSpace());
+		this.render.add(new ledge_systems_RenderWaypoints(this.stage));
 		this.render.add(new ledge_systems_RenderSelected(this.stage));
 		this.render.add(new ledge_systems_PhysicsDisplayUpdate());
 		this.render.add(new ledge_systems_PhysicsDebugRenderer(this.stage));
-		this.render.add(new ledge_systems_RenderWaypoints(this.stage));
 		this.render.add(this.renderer);
 	}
 	,__class__: ledge_Game
@@ -1480,8 +1480,8 @@ ledge_systems_PhysicsDebugRenderer.prototype = {
 		this.map.set(entity,g);
 		this.stage.addChild(g);
 		var color = thx_color__$HSL_HSL_$Impl_$.toRGB(thx_color__$HSL_HSL_$Impl_$.create(Math.random() * 360,0.9,0.3));
-		g.lineStyle(2,color,1);
-		g.beginFill(thx_color__$RGB_RGB_$Impl_$.lighter(color,0.5),0.5);
+		g.lineStyle(1,color,1);
+		g.beginFill(thx_color__$RGB_RGB_$Impl_$.lighter(color,0.5),0.75);
 		data.structure.shapes.map(function(_) {
 			_g.render(g,_);
 			return;
@@ -1781,7 +1781,7 @@ ledge_systems_RenderSelected.prototype = {
 		if(selectable.radius != this.r) {
 			this.r = selectable.radius;
 			this.g.clear();
-			this.g.lineStyle(4,10040064,0.8);
+			this.g.lineStyle(2,10040064,0.8);
 			this.g.beginFill(16737843,0.5);
 			this.g.drawCircle(0,0,this.r);
 			this.g.endFill();
@@ -1856,7 +1856,7 @@ ledge_systems_RenderWaypoints.prototype = {
 		var p1_x = structure.body.get_position().get_x();
 		var p1_y = structure.body.get_position().get_y();
 		this.g.clear();
-		this.g.lineStyle(5,10053171);
+		this.g.lineStyle(2,10040064);
 		this.g.moveTo(p1_x,p1_y);
 		var _g = 0;
 		var _g1 = waypoints.path;
@@ -1865,7 +1865,7 @@ ledge_systems_RenderWaypoints.prototype = {
 			++_g;
 			this.g.lineTo(p2.x,p2.y);
 		}
-		this.g.beginFill(6723976);
+		this.g.beginFill(12277026);
 		var _g2 = 0;
 		var _g11 = waypoints.path;
 		while(_g2 < _g11.length) {

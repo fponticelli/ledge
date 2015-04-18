@@ -19,7 +19,7 @@ class RenderSelected implements edge.ISystem {
     if(selectable.radius != r) {
       r = selectable.radius;
       g.clear();
-      g.lineStyle(4, 0x993300, 0.8);
+      g.lineStyle(2, 0x993300, 0.8);
       g.beginFill(0xFF6633, 0.5);
       g.drawCircle(0, 0, r);
       g.endFill();

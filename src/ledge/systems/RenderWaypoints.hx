@@ -18,12 +18,12 @@ class RenderWaypoints implements edge.ISystem {
   function update(selected : Selected, waypoints : Waypoints, structure : Structure) {
     var p1 = { x : structure.body.position.x, y : structure.body.position.y };
     g.clear();
-    g.lineStyle(5, 0x996633);
+    g.lineStyle(2, 0x993300);
     g.moveTo(p1.x, p1.y);
     for(p2 in waypoints.path) {
       g.lineTo(p2.x, p2.y);
     }
-    g.beginFill(0x669988);
+    g.beginFill(0xBB5522);
     for(p2 in waypoints.path) {
       g.drawCircle(p2.x, p2.y, 8);
     }
