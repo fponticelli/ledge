@@ -1116,19 +1116,40 @@ var ledge_Game = function(renderer) {
 ledge_Game.__name__ = ["ledge","Game"];
 ledge_Game.prototype = {
 	createWarrior: function(x,y) {
-		var head = ledge_components_Structure.ball(x,y,20,new nape_phys_Material(0.8,1.0,1.4,1.5,0.01));
+		var head = new ledge_components_Structure([new nape_shape_Circle(20),new nape_shape_Circle(12,new nape_geom_Vec2(0,-20)),new nape_shape_Circle(12,new nape_geom_Vec2(0,20))],new nape_phys_Material(0.8,1.0,1.4,1.5,0.01));
+		head.body.get_position().setxy(x,y);
 		var p = this.engine.create([head,new ledge_components_Selectable(30),new ledge_components_Waypoints()]);
+	}
+	,createButton: function(x,y,label,handler) {
+		var text = new PIXI.Text(label);
+		var bg = new PIXI.Graphics();
+		var container = new PIXI.Container();
+		var w = 120;
+		var h = 30;
+		bg.beginFill(3569808,0.75);
+		bg.drawRoundedRect(-w / 2,-h / 2,w,h,5);
+		container.addChild(bg);
+		container.addChild(text);
+		text.anchor.set(0.5,0.5);
+		container.x = x;
+		container.y = y;
+		return this.engine.create([new edge_pixi_components_Display(container),new ledge_components_Button(handler,w,h)]);
 	}
 	,addEnitities: function() {
 		this.createWarrior(100,100);
 		this.createWarrior(500,200);
 		this.createWarrior(300,500);
+		this.createButton(720,30,"click me",function() {
+			console.log("CLICK");
+		});
 	}
 	,addSystems: function() {
 		var mouse = this.frame.createPhase();
+		mouse.add(new ledge_systems_MouseButtonSystem(this.stage));
 		mouse.add(new ledge_systems_MouseSelectSystem(this.stage,ledge_components_Selected.instance));
 		mouse.add(new ledge_systems_MousePathSystem(this.stage));
-		this.render.add(new ledge_systems_PhysicsSpace());
+		var realtime = this.physics.createPhase();
+		realtime.add(new ledge_systems_PhysicsSpace());
 		this.render.add(new ledge_systems_RenderSelected(this.stage));
 		this.render.add(new ledge_systems_PhysicsDisplayUpdate());
 		this.render.add(new ledge_systems_PhysicsDebugRenderer(this.stage));
@@ -1136,6 +1157,19 @@ ledge_Game.prototype = {
 		this.render.add(this.renderer);
 	}
 	,__class__: ledge_Game
+};
+var ledge_components_Button = function(handler,width,height) {
+	this.handler = handler;
+	this.width = width;
+	this.height = height;
+};
+ledge_components_Button.__name__ = ["ledge","components","Button"];
+ledge_components_Button.__interfaces__ = [edge_IComponent];
+ledge_components_Button.prototype = {
+	toString: function(handler,width,height) {
+		return "Button(handler=$handler,width=$width,height=$height)";
+	}
+	,__class__: ledge_components_Button
 };
 var ledge_components_Selectable = function(radius) {
 	this.radius = radius;
@@ -1223,6 +1257,77 @@ ledge_components_Waypoints.prototype = {
 	}
 	,__class__: ledge_components_Waypoints
 };
+var ledge_systems_MouseButtonSystem = function(stage) {
+	edge_pixi_cosystems_MouseSystem.call(this,stage);
+	this.__process__ = new ledge_systems_MouseButtonSystem_$SystemProcess(this);
+};
+ledge_systems_MouseButtonSystem.__name__ = ["ledge","systems","MouseButtonSystem"];
+ledge_systems_MouseButtonSystem.__interfaces__ = [edge_ISystem];
+ledge_systems_MouseButtonSystem.__super__ = edge_pixi_cosystems_MouseSystem;
+ledge_systems_MouseButtonSystem.prototype = $extend(edge_pixi_cosystems_MouseSystem.prototype,{
+	update: function(display,button) {
+		if(!this.firstDown) return false;
+		var x1 = display.node.x - button.width / 2;
+		var x2 = display.node.x + button.width / 2;
+		var y1 = display.node.y - button.height / 2;
+		var y2 = display.node.y + button.height / 2;
+		if(this.x < x1 || this.x > x2 || this.y < y1 || this.y > y2) return true;
+		button.handler();
+		return false;
+		return true;
+	}
+	,toString: function() {
+		return "ledge.systems.MouseButtonSystem";
+	}
+	,__class__: ledge_systems_MouseButtonSystem
+});
+var ledge_systems_MouseButtonSystem_$SystemProcess = function(system) {
+	this.system = system;
+	this.updateItems = new edge_View();
+};
+ledge_systems_MouseButtonSystem_$SystemProcess.__name__ = ["ledge","systems","MouseButtonSystem_SystemProcess"];
+ledge_systems_MouseButtonSystem_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
+ledge_systems_MouseButtonSystem_$SystemProcess.prototype = {
+	removeEntity: function(entity) {
+		this.updateItems.tryRemove(entity);
+	}
+	,addEntity: function(entity) {
+		this.updateMatchRequirements(entity);
+	}
+	,update: function(engine,delta) {
+		var result = true;
+		if(this.updateItems.count > 0) this.system.before();
+		var data;
+		var $it0 = this.updateItems.iterator();
+		while( $it0.hasNext() ) {
+			var item = $it0.next();
+			data = item.data;
+			result = this.system.update(data.display,data.button);
+			if(!result) break;
+		}
+		this.system.after();
+		return result;
+	}
+	,updateMatchRequirements: function(entity) {
+		var removed = this.updateItems.tryRemove(entity);
+		var count = 2;
+		var o = { display : null, button : null};
+		var $it0 = entity.map.iterator();
+		while( $it0.hasNext() ) {
+			var component = $it0.next();
+			if(js_Boot.__instanceof(component,edge_pixi_components_Display)) {
+				o.display = component;
+				if(--count == 0) break; else continue;
+			}
+			if(js_Boot.__instanceof(component,ledge_components_Button)) {
+				o.button = component;
+				if(--count == 0) break; else continue;
+			}
+		}
+		var added = count == 0 && this.updateItems.tryAdd(entity,o);
+	}
+	,__class__: ledge_systems_MouseButtonSystem_$SystemProcess
+};
 var ledge_systems_MousePathSystem = function(stage) {
 	edge_pixi_cosystems_MouseSystem.call(this,stage);
 	this.__process__ = new ledge_systems_MousePathSystem_$SystemProcess(this);
@@ -1233,7 +1338,6 @@ ledge_systems_MousePathSystem.__super__ = edge_pixi_cosystems_MouseSystem;
 ledge_systems_MousePathSystem.prototype = $extend(edge_pixi_cosystems_MouseSystem.prototype,{
 	update: function(waypoints,selected) {
 		if(!this.firstDown) return true;
-		console.log("mouse path");
 		waypoints.path.push(new PIXI.Point(this.x,this.y));
 		return true;
 	}
@@ -1376,11 +1480,13 @@ ledge_systems_PhysicsDebugRenderer.prototype = {
 		this.map.set(entity,g);
 		this.stage.addChild(g);
 		var color = thx_color__$HSL_HSL_$Impl_$.toRGB(thx_color__$HSL_HSL_$Impl_$.create(Math.random() * 360,0.9,0.3));
-		g.lineStyle(3,color,0.75);
+		g.lineStyle(2,color,1);
+		g.beginFill(thx_color__$RGB_RGB_$Impl_$.lighter(color,0.5),0.5);
 		data.structure.shapes.map(function(_) {
 			_g.render(g,_);
 			return;
 		});
+		g.endFill();
 	}
 	,updateRemoved: function(entity,data) {
 		var g = this.map.h[entity.__id__];

@@ -9,6 +9,7 @@ import edge.pixi.components.*;
 import ledge.components.*;
 import edge.pixi.systems.*;
 import ledge.systems.*;
+import nape.shape.*;
 
 class Game {
   var world : World;
@@ -53,15 +54,41 @@ class Game {
       ]);
   }
 
+  function createButton(x : Float, y : Float, label : String, handler : Void -> Void) {
+    var text = new pixi.core.text.Text(label),
+        bg = new pixi.core.graphics.Graphics(),
+        container = new pixi.core.display.Container(),
+        w = 120,
+        h = 30;
+    bg.beginFill(0x367890, 0.75);
+    bg.drawRoundedRect(-w/2,-h/2, w, h, 5);
+    container.addChild(bg);
+    container.addChild(text);
+    text.anchor.set(0.5, 0.5);
+    container.x = x;
+    container.y = y;
+    return engine.create([
+        new Display(container),
+        new Button(handler, w, h)
+      ]);
+  }
+
   public function addEnitities() {
     createWarrior(100, 100);
     createWarrior(500, 200);
     createWarrior(300, 500);
+
+    createButton(
+      720, 30,
+      "click me",
+      function() trace("CLICK")
+    );
   }
 
   public function addSystems() {
     // interaction
     var mouse = frame.createPhase();
+    mouse.add(new MouseButtonSystem(stage));
     mouse.add(new MouseSelectSystem(stage, Selected.instance));
     mouse.add(new MousePathSystem(stage));
 
