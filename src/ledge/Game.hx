@@ -37,7 +37,15 @@ class Game {
   }
 
   function createWarrior(x : Float, y : Float) {
-    var head = Structure.ball(x, y, 20, new nape.phys.Material(0.8, 1.0, 1.4, 1.5, 0.01));
+    var head = new Structure(
+          [
+            new Circle(20),
+            new Circle(12, new nape.geom.Vec2(0, -20)),
+            new Circle(12, new nape.geom.Vec2(0, 20))
+          ],
+          new nape.phys.Material(0.8, 1.0, 1.4, 1.5, 0.01)
+          );
+    head.body.position.setxy(x, y);
     var p = engine.create([
         head,
         new Selectable(30),
@@ -58,7 +66,8 @@ class Game {
     mouse.add(new MousePathSystem(stage));
 
     // physics
-    render.add(new PhysicsSpace());
+    var realtime = physics.createPhase();
+    realtime.add(new PhysicsSpace());
 
     // rendering systems
     render.add(new RenderSelected(stage));
