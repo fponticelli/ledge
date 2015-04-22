@@ -555,7 +555,7 @@ var edge_World = function(delta,schedule) {
 	this.remainder = 0;
 	this.running = false;
 	this.delta = delta;
-	if(null != schedule) this.schedule = schedule; else this.schedule = thx_core_Timer.frame;
+	if(null != schedule) this.schedule = schedule; else this.schedule = thx_Timer.frame;
 };
 edge_World.__name__ = ["edge","World"];
 edge_World.prototype = {
@@ -845,6 +845,9 @@ haxe_CallStack.makeStack = function(s) {
 };
 var haxe_IMap = function() { };
 haxe_IMap.__name__ = ["haxe","IMap"];
+haxe_IMap.prototype = {
+	__class__: haxe_IMap
+};
 var haxe_ds_ObjectMap = function() {
 	this.h = { };
 	this.h.__keys__ = { };
@@ -856,6 +859,9 @@ haxe_ds_ObjectMap.prototype = {
 		var id = key.__id__ || (key.__id__ = ++haxe_ds_ObjectMap.count);
 		this.h[id] = value;
 		this.h.__keys__[id] = key;
+	}
+	,get: function(key) {
+		return this.h[key.__id__];
 	}
 	,remove: function(key) {
 		var id = key.__id__;
@@ -1092,11 +1098,11 @@ js_Boot.__isNativeObj = function(o) {
 js_Boot.__resolveNativeClass = function(name) {
 	if(typeof window != "undefined") return window[name]; else return global[name];
 };
-var thx_core_StaticResource = function() { };
-thx_core_StaticResource.__name__ = ["thx","core","StaticResource"];
+var thx_StaticResource = function() { };
+thx_StaticResource.__name__ = ["thx","StaticResource"];
 var ledge_Config = function() { };
 ledge_Config.__name__ = ["ledge","Config"];
-ledge_Config.__interfaces__ = [thx_core_StaticResource];
+ledge_Config.__interfaces__ = [thx_StaticResource];
 ledge_Config.init = function() {
 	ledge_Config.stage.resolution = window.devicePixelRatio;
 };
@@ -17683,14 +17689,1251 @@ nape_util_Debug.clearObjectPools = function() {
 		zpp_$nape_util_ZPP_$PubPool.poolVec3 = nxt96;
 	}
 };
+var thx_Arrays = function() { };
+thx_Arrays.__name__ = ["thx","Arrays"];
+thx_Arrays.after = function(array,element) {
+	return array.slice(HxOverrides.indexOf(array,element,0) + 1);
+};
+thx_Arrays.all = function(arr,predicate) {
+	var _g = 0;
+	while(_g < arr.length) {
+		var item = arr[_g];
+		++_g;
+		if(!predicate(item)) return false;
+	}
+	return true;
+};
+thx_Arrays.any = function(arr,predicate) {
+	var _g = 0;
+	while(_g < arr.length) {
+		var item = arr[_g];
+		++_g;
+		if(predicate(item)) return true;
+	}
+	return false;
+};
+thx_Arrays.at = function(arr,indexes) {
+	return indexes.map(function(i) {
+		return arr[i];
+	});
+};
+thx_Arrays.before = function(array,element) {
+	return array.slice(0,HxOverrides.indexOf(array,element,0));
+};
+thx_Arrays.compact = function(arr) {
+	return arr.filter(function(v) {
+		return null != v;
+	});
+};
+thx_Arrays.contains = function(array,element,eq) {
+	if(null == eq) return HxOverrides.indexOf(array,element,0) >= 0; else {
+		var _g1 = 0;
+		var _g = array.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			if(eq(array[i],element)) return true;
+		}
+		return false;
+	}
+};
+thx_Arrays.cross = function(a,b) {
+	var r = [];
+	var _g = 0;
+	while(_g < a.length) {
+		var va = a[_g];
+		++_g;
+		var _g1 = 0;
+		while(_g1 < b.length) {
+			var vb = b[_g1];
+			++_g1;
+			r.push([va,vb]);
+		}
+	}
+	return r;
+};
+thx_Arrays.crossMulti = function(array) {
+	var acopy = array.slice();
+	var result = acopy.shift().map(function(v) {
+		return [v];
+	});
+	while(acopy.length > 0) {
+		var array1 = acopy.shift();
+		var tresult = result;
+		result = [];
+		var _g = 0;
+		while(_g < array1.length) {
+			var v1 = array1[_g];
+			++_g;
+			var _g1 = 0;
+			while(_g1 < tresult.length) {
+				var ar = tresult[_g1];
+				++_g1;
+				var t = ar.slice();
+				t.push(v1);
+				result.push(t);
+			}
+		}
+	}
+	return result;
+};
+thx_Arrays.distinct = function(array,predicate) {
+	var result = [];
+	if(array.length <= 1) return array;
+	if(null == predicate) predicate = thx_Functions.equality;
+	var _g = 0;
+	while(_g < array.length) {
+		var v = [array[_g]];
+		++_g;
+		var keep = !thx_Arrays.any(result,(function(v) {
+			return function(r) {
+				return predicate(r,v[0]);
+			};
+		})(v));
+		if(keep) result.push(v[0]);
+	}
+	return result;
+};
+thx_Arrays.eachPair = function(array,callback) {
+	var _g1 = 0;
+	var _g = array.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		var _g3 = i;
+		var _g2 = array.length;
+		while(_g3 < _g2) {
+			var j = _g3++;
+			if(!callback(array[i],array[j])) return;
+		}
+	}
+};
+thx_Arrays.equals = function(a,b,equality) {
+	if(a == null || b == null || a.length != b.length) return false;
+	if(null == equality) equality = thx_Functions.equality;
+	var _g1 = 0;
+	var _g = a.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		if(!equality(a[i],b[i])) return false;
+	}
+	return true;
+};
+thx_Arrays.extract = function(a,predicate) {
+	var _g1 = 0;
+	var _g = a.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		if(predicate(a[i])) return a.splice(i,1)[0];
+	}
+	return null;
+};
+thx_Arrays.find = function(array,predicate) {
+	var _g = 0;
+	while(_g < array.length) {
+		var item = array[_g];
+		++_g;
+		if(predicate(item)) return item;
+	}
+	return null;
+};
+thx_Arrays.findLast = function(array,predicate) {
+	var len = array.length;
+	var j;
+	var _g = 0;
+	while(_g < len) {
+		var i = _g++;
+		j = len - i - 1;
+		if(predicate(array[j])) return array[j];
+	}
+	return null;
+};
+thx_Arrays.first = function(array) {
+	return array[0];
+};
+thx_Arrays.flatMap = function(array,callback) {
+	return thx_Arrays.flatten(array.map(callback));
+};
+thx_Arrays.flatten = function(array) {
+	return Array.prototype.concat.apply([],array);
+};
+thx_Arrays.from = function(array,element) {
+	return array.slice(HxOverrides.indexOf(array,element,0));
+};
+thx_Arrays.groupByAppend = function(arr,resolver,map) {
+	arr.map(function(v) {
+		var key = resolver(v);
+		var arr1 = map.get(key);
+		if(null == arr1) {
+			arr1 = [v];
+			map.set(key,arr1);
+		} else arr1.push(v);
+	});
+	return map;
+};
+thx_Arrays.head = function(array) {
+	return array[0];
+};
+thx_Arrays.ifEmpty = function(value,alt) {
+	if(null != value && 0 != value.length) return value; else return alt;
+};
+thx_Arrays.initial = function(array) {
+	return array.slice(0,array.length - 1);
+};
+thx_Arrays.isEmpty = function(array) {
+	return array.length == 0;
+};
+thx_Arrays.last = function(array) {
+	return array[array.length - 1];
+};
+thx_Arrays.mapi = function(array,callback) {
+	var r = [];
+	var _g1 = 0;
+	var _g = array.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		r.push(callback(array[i],i));
+	}
+	return r;
+};
+thx_Arrays.mapRight = function(array,callback) {
+	var i = array.length;
+	var result = [];
+	while(--i >= 0) result.push(callback(array[i]));
+	return result;
+};
+thx_Arrays.order = function(array,sort) {
+	var n = array.slice();
+	n.sort(sort);
+	return n;
+};
+thx_Arrays.pull = function(array,toRemove,equality) {
+	var _g = 0;
+	while(_g < toRemove.length) {
+		var item = toRemove[_g];
+		++_g;
+		thx_Arrays.removeAll(array,item,equality);
+	}
+};
+thx_Arrays.pushIf = function(array,condition,value) {
+	if(condition) array.push(value);
+	return array;
+};
+thx_Arrays.reduce = function(array,callback,initial) {
+	return array.reduce(callback,initial);
+};
+thx_Arrays.resize = function(array,length,fill) {
+	while(array.length < length) array.push(fill);
+	array.splice(length,array.length - length);
+	return array;
+};
+thx_Arrays.reducei = function(array,callback,initial) {
+	return array.reduce(callback,initial);
+};
+thx_Arrays.reduceRight = function(array,callback,initial) {
+	var i = array.length;
+	while(--i >= 0) initial = callback(initial,array[i]);
+	return initial;
+};
+thx_Arrays.removeAll = function(array,element,equality) {
+	if(null == equality) equality = thx_Functions.equality;
+	var i = array.length;
+	while(--i >= 0) if(equality(array[i],element)) array.splice(i,1);
+};
+thx_Arrays.rest = function(array) {
+	return array.slice(1);
+};
+thx_Arrays.sample = function(array,n) {
+	n = thx_Ints.min(n,array.length);
+	var copy = array.slice();
+	var result = [];
+	var _g = 0;
+	while(_g < n) {
+		var i = _g++;
+		result.push(copy.splice(Std.random(copy.length),1)[0]);
+	}
+	return result;
+};
+thx_Arrays.sampleOne = function(array) {
+	return array[Std.random(array.length)];
+};
+thx_Arrays.shuffle = function(a) {
+	var t = thx_Ints.range(a.length);
+	var array = [];
+	while(t.length > 0) {
+		var pos = Std.random(t.length);
+		var index = t[pos];
+		t.splice(pos,1);
+		array.push(a[index]);
+	}
+	return array;
+};
+thx_Arrays.take = function(arr,n) {
+	return arr.slice(0,n);
+};
+thx_Arrays.takeLast = function(arr,n) {
+	return arr.slice(arr.length - n);
+};
+thx_Arrays.rotate = function(arr) {
+	var result = [];
+	var _g1 = 0;
+	var _g = arr[0].length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		var row = [];
+		result.push(row);
+		var _g3 = 0;
+		var _g2 = arr.length;
+		while(_g3 < _g2) {
+			var j = _g3++;
+			row.push(arr[j][i]);
+		}
+	}
+	return result;
+};
+thx_Arrays.zip = function(array1,array2) {
+	var length = thx_Ints.min(array1.length,array2.length);
+	var array = [];
+	var _g = 0;
+	while(_g < length) {
+		var i = _g++;
+		array.push({ _0 : array1[i], _1 : array2[i]});
+	}
+	return array;
+};
+thx_Arrays.zip3 = function(array1,array2,array3) {
+	var length = thx_ArrayInts.min([array1.length,array2.length,array3.length]);
+	var array = [];
+	var _g = 0;
+	while(_g < length) {
+		var i = _g++;
+		array.push({ _0 : array1[i], _1 : array2[i], _2 : array3[i]});
+	}
+	return array;
+};
+thx_Arrays.zip4 = function(array1,array2,array3,array4) {
+	var length = thx_ArrayInts.min([array1.length,array2.length,array3.length,array4.length]);
+	var array = [];
+	var _g = 0;
+	while(_g < length) {
+		var i = _g++;
+		array.push({ _0 : array1[i], _1 : array2[i], _2 : array3[i], _3 : array4[i]});
+	}
+	return array;
+};
+thx_Arrays.zip5 = function(array1,array2,array3,array4,array5) {
+	var length = thx_ArrayInts.min([array1.length,array2.length,array3.length,array4.length,array5.length]);
+	var array = [];
+	var _g = 0;
+	while(_g < length) {
+		var i = _g++;
+		array.push({ _0 : array1[i], _1 : array2[i], _2 : array3[i], _3 : array4[i], _4 : array5[i]});
+	}
+	return array;
+};
+thx_Arrays.unzip = function(array) {
+	var a1 = [];
+	var a2 = [];
+	array.map(function(t) {
+		a1.push(t._0);
+		a2.push(t._1);
+	});
+	return { _0 : a1, _1 : a2};
+};
+thx_Arrays.unzip3 = function(array) {
+	var a1 = [];
+	var a2 = [];
+	var a3 = [];
+	array.map(function(t) {
+		a1.push(t._0);
+		a2.push(t._1);
+		a3.push(t._2);
+	});
+	return { _0 : a1, _1 : a2, _2 : a3};
+};
+thx_Arrays.unzip4 = function(array) {
+	var a1 = [];
+	var a2 = [];
+	var a3 = [];
+	var a4 = [];
+	array.map(function(t) {
+		a1.push(t._0);
+		a2.push(t._1);
+		a3.push(t._2);
+		a4.push(t._3);
+	});
+	return { _0 : a1, _1 : a2, _2 : a3, _3 : a4};
+};
+thx_Arrays.unzip5 = function(array) {
+	var a1 = [];
+	var a2 = [];
+	var a3 = [];
+	var a4 = [];
+	var a5 = [];
+	array.map(function(t) {
+		a1.push(t._0);
+		a2.push(t._1);
+		a3.push(t._2);
+		a4.push(t._3);
+		a5.push(t._4);
+	});
+	return { _0 : a1, _1 : a2, _2 : a3, _3 : a4, _4 : a5};
+};
+var thx_ArrayFloats = function() { };
+thx_ArrayFloats.__name__ = ["thx","ArrayFloats"];
+thx_ArrayFloats.average = function(arr) {
+	return thx_ArrayFloats.sum(arr) / arr.length;
+};
+thx_ArrayFloats.compact = function(arr) {
+	return arr.filter(function(v) {
+		return null != v && isFinite(v);
+	});
+};
+thx_ArrayFloats.max = function(arr) {
+	if(arr.length == 0) return null; else return arr.reduce(function(max,v) {
+		if(v > max) return v; else return max;
+	},arr[0]);
+};
+thx_ArrayFloats.min = function(arr) {
+	if(arr.length == 0) return null; else return arr.reduce(function(min,v) {
+		if(v < min) return v; else return min;
+	},arr[0]);
+};
+thx_ArrayFloats.resize = function(array,length,fill) {
+	if(fill == null) fill = 0.0;
+	while(array.length < length) array.push(fill);
+	array.splice(length,array.length - length);
+	return array;
+};
+thx_ArrayFloats.sum = function(arr) {
+	return arr.reduce(function(tot,v) {
+		return tot + v;
+	},0.0);
+};
+var thx_ArrayInts = function() { };
+thx_ArrayInts.__name__ = ["thx","ArrayInts"];
+thx_ArrayInts.average = function(arr) {
+	return thx_ArrayInts.sum(arr) / arr.length;
+};
+thx_ArrayInts.max = function(arr) {
+	if(arr.length == 0) return null; else return arr.reduce(function(max,v) {
+		if(v > max) return v; else return max;
+	},arr[0]);
+};
+thx_ArrayInts.min = function(arr) {
+	if(arr.length == 0) return null; else return arr.reduce(function(min,v) {
+		if(v < min) return v; else return min;
+	},arr[0]);
+};
+thx_ArrayInts.resize = function(array,length,fill) {
+	if(fill == null) fill = 0;
+	while(array.length < length) array.push(fill);
+	array.splice(length,array.length - length);
+	return array;
+};
+thx_ArrayInts.sum = function(arr) {
+	return arr.reduce(function(tot,v) {
+		return tot + v;
+	},0);
+};
+var thx_ArrayStrings = function() { };
+thx_ArrayStrings.__name__ = ["thx","ArrayStrings"];
+thx_ArrayStrings.compact = function(arr) {
+	return arr.filter(function(v) {
+		return !thx_Strings.isEmpty(v);
+	});
+};
+thx_ArrayStrings.max = function(arr) {
+	if(arr.length == 0) return null; else return arr.reduce(function(max,v) {
+		if(v > max) return v; else return max;
+	},arr[0]);
+};
+thx_ArrayStrings.min = function(arr) {
+	if(arr.length == 0) return null; else return arr.reduce(function(min,v) {
+		if(v < min) return v; else return min;
+	},arr[0]);
+};
+var thx_Error = function(message,stack,pos) {
+	Error.call(this,message);
+	this.message = message;
+	if(null == stack) {
+		try {
+			stack = haxe_CallStack.exceptionStack();
+		} catch( e ) {
+			haxe_CallStack.lastException = e;
+			if (e instanceof js__$Boot_HaxeError) e = e.val;
+			stack = [];
+		}
+		if(stack.length == 0) try {
+			stack = haxe_CallStack.callStack();
+		} catch( e1 ) {
+			haxe_CallStack.lastException = e1;
+			if (e1 instanceof js__$Boot_HaxeError) e1 = e1.val;
+			stack = [];
+		}
+	}
+	this.stackItems = stack;
+	this.pos = pos;
+};
+thx_Error.__name__ = ["thx","Error"];
+thx_Error.fromDynamic = function(err,pos) {
+	if(js_Boot.__instanceof(err,thx_Error)) return err;
+	return new thx_error_ErrorWrapper("" + Std.string(err),err,null,pos);
+};
+thx_Error.__super__ = Error;
+thx_Error.prototype = $extend(Error.prototype,{
+	toString: function() {
+		return this.message + "\nfrom: " + this.pos.className + "." + this.pos.methodName + "() at " + this.pos.lineNumber + "\n\n" + haxe_CallStack.toString(this.stackItems);
+	}
+	,__class__: thx_Error
+});
+var thx_Floats = function() { };
+thx_Floats.__name__ = ["thx","Floats"];
+thx_Floats.angleDifference = function(a,b,turn) {
+	if(turn == null) turn = 360;
+	var r = (b - a) % turn;
+	if(r < 0) r += turn;
+	if(r > turn / 2) r -= turn;
+	return r;
+};
+thx_Floats.ceilTo = function(f,decimals) {
+	var p = Math.pow(10,decimals);
+	return Math.ceil(f * p) / p;
+};
+thx_Floats.canParse = function(s) {
+	return thx_Floats.pattern_parse.match(s);
+};
+thx_Floats.clamp = function(v,min,max) {
+	if(v < min) return min; else if(v > max) return max; else return v;
+};
+thx_Floats.clampSym = function(v,max) {
+	return thx_Floats.clamp(v,-max,max);
+};
+thx_Floats.compare = function(a,b) {
+	if(a < b) return -1; else if(a > b) return 1; else return 0;
+};
+thx_Floats.floorTo = function(f,decimals) {
+	var p = Math.pow(10,decimals);
+	return Math.floor(f * p) / p;
+};
+thx_Floats.interpolate = function(f,a,b) {
+	return (b - a) * f + a;
+};
+thx_Floats.interpolateAngle = function(f,a,b,turn) {
+	if(turn == null) turn = 360;
+	return thx_Floats.wrapCircular(thx_Floats.interpolate(f,a,a + thx_Floats.angleDifference(a,b,turn)),turn);
+};
+thx_Floats.interpolateAngleWidest = function(f,a,b,turn) {
+	if(turn == null) turn = 360;
+	return thx_Floats.wrapCircular(thx_Floats.interpolateAngle(f,a,b,turn) - turn / 2,turn);
+};
+thx_Floats.interpolateAngleCW = function(f,a,b,turn) {
+	if(turn == null) turn = 360;
+	a = thx_Floats.wrapCircular(a,turn);
+	b = thx_Floats.wrapCircular(b,turn);
+	if(b < a) b += turn;
+	return thx_Floats.wrapCircular(thx_Floats.interpolate(f,a,b),turn);
+};
+thx_Floats.interpolateAngleCCW = function(f,a,b,turn) {
+	if(turn == null) turn = 360;
+	a = thx_Floats.wrapCircular(a,turn);
+	b = thx_Floats.wrapCircular(b,turn);
+	if(b > a) b -= turn;
+	return thx_Floats.wrapCircular(thx_Floats.interpolate(f,a,b),turn);
+};
+thx_Floats.nearEquals = function(a,b) {
+	return Math.abs(a - b) <= 10e-10;
+};
+thx_Floats.nearZero = function(n) {
+	return Math.abs(n) <= 10e-10;
+};
+thx_Floats.normalize = function(v) {
+	if(v < 0) return 0; else if(v > 1) return 1; else return v;
+};
+thx_Floats.parse = function(s) {
+	if(s.substring(0,1) == "+") s = s.substring(1);
+	return parseFloat(s);
+};
+thx_Floats.root = function(base,index) {
+	return Math.pow(base,1 / index);
+};
+thx_Floats.roundTo = function(f,decimals) {
+	var p = Math.pow(10,decimals);
+	return Math.round(f * p) / p;
+};
+thx_Floats.sign = function(value) {
+	if(value < 0) return -1; else return 1;
+};
+thx_Floats.wrap = function(v,min,max) {
+	var range = max - min + 1;
+	if(v < min) v += range * ((min - v) / range + 1);
+	return min + (v - min) % range;
+};
+thx_Floats.wrapCircular = function(v,max) {
+	v = v % max;
+	if(v < 0) v += max;
+	return v;
+};
+var thx_Functions0 = function() { };
+thx_Functions0.__name__ = ["thx","Functions0"];
+thx_Functions0.after = function(callback,n) {
+	return function() {
+		if(--n == 0) callback();
+	};
+};
+thx_Functions0.join = function(fa,fb) {
+	return function() {
+		fa();
+		fb();
+	};
+};
+thx_Functions0.once = function(f) {
+	return function() {
+		var t = f;
+		f = thx_Functions.noop;
+		t();
+	};
+};
+thx_Functions0.negate = function(callback) {
+	return function() {
+		return !callback();
+	};
+};
+thx_Functions0.times = function(n,callback) {
+	return function() {
+		return thx_Ints.range(n).map(function(_) {
+			return callback();
+		});
+	};
+};
+thx_Functions0.timesi = function(n,callback) {
+	return function() {
+		return thx_Ints.range(n).map(function(i) {
+			return callback(i);
+		});
+	};
+};
+var thx_Functions1 = function() { };
+thx_Functions1.__name__ = ["thx","Functions1"];
+thx_Functions1.compose = function(fa,fb) {
+	return function(v) {
+		return fa(fb(v));
+	};
+};
+thx_Functions1.join = function(fa,fb) {
+	return function(v) {
+		fa(v);
+		fb(v);
+	};
+};
+thx_Functions1.memoize = function(callback,resolver) {
+	if(null == resolver) resolver = function(v) {
+		return "" + Std.string(v);
+	};
+	var map = new haxe_ds_StringMap();
+	return function(v1) {
+		var key = resolver(v1);
+		if(__map_reserved[key] != null?map.existsReserved(key):map.h.hasOwnProperty(key)) return __map_reserved[key] != null?map.getReserved(key):map.h[key];
+		var result = callback(v1);
+		if(__map_reserved[key] != null) map.setReserved(key,result); else map.h[key] = result;
+		return result;
+	};
+};
+thx_Functions1.negate = function(callback) {
+	return function(v) {
+		return !callback(v);
+	};
+};
+thx_Functions1.noop = function(_) {
+};
+thx_Functions1.times = function(n,callback) {
+	return function(value) {
+		return thx_Ints.range(n).map(function(_) {
+			return callback(value);
+		});
+	};
+};
+thx_Functions1.timesi = function(n,callback) {
+	return function(value) {
+		return thx_Ints.range(n).map(function(i) {
+			return callback(value,i);
+		});
+	};
+};
+thx_Functions1.swapArguments = function(callback) {
+	return function(a2,a1) {
+		return callback(a1,a2);
+	};
+};
+var thx_Functions2 = function() { };
+thx_Functions2.__name__ = ["thx","Functions2"];
+thx_Functions2.memoize = function(callback,resolver) {
+	if(null == resolver) resolver = function(v1,v2) {
+		return "" + Std.string(v1) + ":" + Std.string(v2);
+	};
+	var map = new haxe_ds_StringMap();
+	return function(v11,v21) {
+		var key = resolver(v11,v21);
+		if(__map_reserved[key] != null?map.existsReserved(key):map.h.hasOwnProperty(key)) return __map_reserved[key] != null?map.getReserved(key):map.h[key];
+		var result = callback(v11,v21);
+		if(__map_reserved[key] != null) map.setReserved(key,result); else map.h[key] = result;
+		return result;
+	};
+};
+thx_Functions2.negate = function(callback) {
+	return function(v1,v2) {
+		return !callback(v1,v2);
+	};
+};
+var thx_Functions3 = function() { };
+thx_Functions3.__name__ = ["thx","Functions3"];
+thx_Functions3.memoize = function(callback,resolver) {
+	if(null == resolver) resolver = function(v1,v2,v3) {
+		return "" + Std.string(v1) + ":" + Std.string(v2) + ":" + Std.string(v3);
+	};
+	var map = new haxe_ds_StringMap();
+	return function(v11,v21,v31) {
+		var key = resolver(v11,v21,v31);
+		if(__map_reserved[key] != null?map.existsReserved(key):map.h.hasOwnProperty(key)) return __map_reserved[key] != null?map.getReserved(key):map.h[key];
+		var result = callback(v11,v21,v31);
+		if(__map_reserved[key] != null) map.setReserved(key,result); else map.h[key] = result;
+		return result;
+	};
+};
+thx_Functions3.negate = function(callback) {
+	return function(v1,v2,v3) {
+		return !callback(v1,v2,v3);
+	};
+};
+var thx_Functions = function() { };
+thx_Functions.__name__ = ["thx","Functions"];
+thx_Functions.constant = function(v) {
+	return function() {
+		return v;
+	};
+};
+thx_Functions.equality = function(a,b) {
+	return a == b;
+};
+thx_Functions.identity = function(value) {
+	return value;
+};
+thx_Functions.noop = function() {
+};
+var thx_Ints = function() { };
+thx_Ints.__name__ = ["thx","Ints"];
+thx_Ints.abs = function(v) {
+	if(v < 0) return -v; else return v;
+};
+thx_Ints.canParse = function(s) {
+	return thx_Ints.pattern_parse.match(s);
+};
+thx_Ints.clamp = function(v,min,max) {
+	if(v < min) return min; else if(v > max) return max; else return v;
+};
+thx_Ints.clampSym = function(v,max) {
+	return thx_Ints.clamp(v,-max,max);
+};
+thx_Ints.compare = function(a,b) {
+	return a - b;
+};
+thx_Ints.interpolate = function(f,a,b) {
+	return Math.round(a + (b - a) * f);
+};
+thx_Ints.isEven = function(v) {
+	return v % 2 == 0;
+};
+thx_Ints.isOdd = function(v) {
+	return v % 2 != 0;
+};
+thx_Ints.max = function(a,b) {
+	if(a > b) return a; else return b;
+};
+thx_Ints.min = function(a,b) {
+	if(a < b) return a; else return b;
+};
+thx_Ints.parse = function(s,base) {
+	var v = parseInt(s,base);
+	if(isNaN(v)) return null; else return v;
+};
+thx_Ints.random = function(min,max) {
+	if(min == null) min = 0;
+	return Std.random(max + 1) + min;
+};
+thx_Ints.range = function(start,stop,step) {
+	if(step == null) step = 1;
+	if(null == stop) {
+		stop = start;
+		start = 0;
+	}
+	if((stop - start) / step == Infinity) throw new js__$Boot_HaxeError("infinite range");
+	var range = [];
+	var i = -1;
+	var j;
+	if(step < 0) while((j = start + step * ++i) > stop) range.push(j); else while((j = start + step * ++i) < stop) range.push(j);
+	return range;
+};
+thx_Ints.toString = function(value,base) {
+	return value.toString(base);
+};
+thx_Ints.toBool = function(v) {
+	return v != 0;
+};
+thx_Ints.sign = function(value) {
+	if(value < 0) return -1; else return 1;
+};
+thx_Ints.wrapCircular = function(v,max) {
+	v = v % max;
+	if(v < 0) v += max;
+	return v;
+};
+var thx_Nil = { __ename__ : true, __constructs__ : ["nil"] };
+thx_Nil.nil = ["nil",0];
+thx_Nil.nil.toString = $estr;
+thx_Nil.nil.__enum__ = thx_Nil;
+var thx_Nulls = function() { };
+thx_Nulls.__name__ = ["thx","Nulls"];
+var thx_Strings = function() { };
+thx_Strings.__name__ = ["thx","Strings"];
+thx_Strings.after = function(value,searchFor) {
+	var pos = value.indexOf(searchFor);
+	if(pos < 0) return ""; else return value.substring(pos + searchFor.length);
+};
+thx_Strings.capitalize = function(s) {
+	return s.substring(0,1).toUpperCase() + s.substring(1);
+};
+thx_Strings.capitalizeWords = function(value,whiteSpaceOnly) {
+	if(whiteSpaceOnly == null) whiteSpaceOnly = false;
+	if(whiteSpaceOnly) return thx_Strings.UCWORDSWS.map(value.substring(0,1).toUpperCase() + value.substring(1),thx_Strings.upperMatch); else return thx_Strings.UCWORDS.map(value.substring(0,1).toUpperCase() + value.substring(1),thx_Strings.upperMatch);
+};
+thx_Strings.collapse = function(value) {
+	return thx_Strings.WSG.replace(StringTools.trim(value)," ");
+};
+thx_Strings.compare = function(a,b) {
+	if(a < b) return -1; else if(a > b) return 1; else return 0;
+};
+thx_Strings.contains = function(s,test) {
+	return s.indexOf(test) >= 0;
+};
+thx_Strings.dasherize = function(s) {
+	return StringTools.replace(s,"_","-");
+};
+thx_Strings.ellipsis = function(s,maxlen,symbol) {
+	if(symbol == null) symbol = "...";
+	if(maxlen == null) maxlen = 20;
+	if(s.length > maxlen) return s.substring(0,symbol.length > maxlen - symbol.length?symbol.length:maxlen - symbol.length) + symbol; else return s;
+};
+thx_Strings.filter = function(s,predicate) {
+	return s.split("").filter(predicate).join("");
+};
+thx_Strings.filterCharcode = function(s,predicate) {
+	return thx_Strings.toCharcodeArray(s).filter(predicate).map(function(i) {
+		return String.fromCharCode(i);
+	}).join("");
+};
+thx_Strings.from = function(value,searchFor) {
+	var pos = value.indexOf(searchFor);
+	if(pos < 0) return ""; else return value.substring(pos);
+};
+thx_Strings.humanize = function(s) {
+	return StringTools.replace(thx_Strings.underscore(s),"_"," ");
+};
+thx_Strings.isAlphaNum = function(value) {
+	return thx_Strings.ALPHANUM.match(value);
+};
+thx_Strings.isLowerCase = function(value) {
+	return value.toLowerCase() == value;
+};
+thx_Strings.isUpperCase = function(value) {
+	return value.toUpperCase() == value;
+};
+thx_Strings.ifEmpty = function(value,alt) {
+	if(null != value && "" != value) return value; else return alt;
+};
+thx_Strings.isDigitsOnly = function(value) {
+	return thx_Strings.DIGITS.match(value);
+};
+thx_Strings.isEmpty = function(value) {
+	return value == null || value == "";
+};
+thx_Strings.random = function(value,length) {
+	if(length == null) length = 1;
+	var pos = Math.floor((value.length - length + 1) * Math.random());
+	return HxOverrides.substr(value,pos,length);
+};
+thx_Strings.iterator = function(s) {
+	var _this = s.split("");
+	return HxOverrides.iter(_this);
+};
+thx_Strings.map = function(value,callback) {
+	return value.split("").map(callback);
+};
+thx_Strings.remove = function(value,toremove) {
+	return StringTools.replace(value,toremove,"");
+};
+thx_Strings.removeAfter = function(value,toremove) {
+	if(StringTools.endsWith(value,toremove)) return value.substring(0,value.length - toremove.length); else return value;
+};
+thx_Strings.removeBefore = function(value,toremove) {
+	if(StringTools.startsWith(value,toremove)) return value.substring(toremove.length); else return value;
+};
+thx_Strings.repeat = function(s,times) {
+	return ((function($this) {
+		var $r;
+		var _g = [];
+		{
+			var _g1 = 0;
+			while(_g1 < times) {
+				var i = _g1++;
+				_g.push(s);
+			}
+		}
+		$r = _g;
+		return $r;
+	}(this))).join("");
+};
+thx_Strings.reverse = function(s) {
+	var arr = s.split("");
+	arr.reverse();
+	return arr.join("");
+};
+thx_Strings.stripTags = function(s) {
+	return thx_Strings.STRIPTAGS.replace(s,"");
+};
+thx_Strings.surround = function(s,left,right) {
+	return "" + left + s + (null == right?left:right);
+};
+thx_Strings.toArray = function(s) {
+	return s.split("");
+};
+thx_Strings.toCharcodeArray = function(s) {
+	return thx_Strings.map(s,function(s1) {
+		return HxOverrides.cca(s1,0);
+	});
+};
+thx_Strings.toChunks = function(s,len) {
+	var chunks = [];
+	while(s.length > 0) {
+		chunks.push(s.substring(0,len));
+		s = s.substring(len);
+	}
+	return chunks;
+};
+thx_Strings.trimChars = function(value,charlist) {
+	return thx_Strings.trimCharsRight(thx_Strings.trimCharsLeft(value,charlist),charlist);
+};
+thx_Strings.trimCharsLeft = function(value,charlist) {
+	var pos = 0;
+	var _g1 = 0;
+	var _g = value.length;
+	while(_g1 < _g) {
+		var i = _g1++;
+		if(thx_Strings.contains(charlist,value.charAt(i))) pos++; else break;
+	}
+	return value.substring(pos);
+};
+thx_Strings.trimCharsRight = function(value,charlist) {
+	var len = value.length;
+	var pos = len;
+	var i;
+	var _g = 0;
+	while(_g < len) {
+		var j = _g++;
+		i = len - j - 1;
+		if(thx_Strings.contains(charlist,value.charAt(i))) pos = i; else break;
+	}
+	return value.substring(0,pos);
+};
+thx_Strings.underscore = function(s) {
+	s = new EReg("::","g").replace(s,"/");
+	s = new EReg("([A-Z]+)([A-Z][a-z])","g").replace(s,"$1_$2");
+	s = new EReg("([a-z\\d])([A-Z])","g").replace(s,"$1_$2");
+	s = new EReg("-","g").replace(s,"_");
+	return s.toLowerCase();
+};
+thx_Strings.upTo = function(value,searchFor) {
+	var pos = value.indexOf(searchFor);
+	if(pos < 0) return value; else return value.substring(0,pos);
+};
+thx_Strings.wrapColumns = function(s,columns,indent,newline) {
+	if(newline == null) newline = "\n";
+	if(indent == null) indent = "";
+	if(columns == null) columns = 78;
+	return thx_Strings.SPLIT_LINES.split(s).map(function(part) {
+		return thx_Strings.wrapLine(StringTools.trim(thx_Strings.WSG.replace(part," ")),columns,indent,newline);
+	}).join(newline);
+};
+thx_Strings.upperMatch = function(re) {
+	return re.matched(0).toUpperCase();
+};
+thx_Strings.wrapLine = function(s,columns,indent,newline) {
+	var parts = [];
+	var pos = 0;
+	var len = s.length;
+	var ilen = indent.length;
+	columns -= ilen;
+	while(true) {
+		if(pos + columns >= len - ilen) {
+			parts.push(s.substring(pos));
+			break;
+		}
+		var i = 0;
+		while(!StringTools.isSpace(s,pos + columns - i) && i < columns) i++;
+		if(i == columns) {
+			i = 0;
+			while(!StringTools.isSpace(s,pos + columns + i) && pos + columns + i < len) i++;
+			parts.push(s.substring(pos,pos + columns + i));
+			pos += columns + i + 1;
+		} else {
+			parts.push(s.substring(pos,pos + columns - i));
+			pos += columns - i + 1;
+		}
+	}
+	return indent + parts.join(newline + indent);
+};
+var thx_Timer = function() { };
+thx_Timer.__name__ = ["thx","Timer"];
+thx_Timer.debounce = function(callback,delayms,leading) {
+	if(leading == null) leading = false;
+	var cancel = thx_Functions.noop;
+	var poll = function() {
+		cancel();
+		cancel = thx_Timer.delay(callback,delayms);
+	};
+	return function() {
+		if(leading) {
+			leading = false;
+			callback();
+		}
+		poll();
+	};
+};
+thx_Timer.throttle = function(callback,delayms,leading) {
+	if(leading == null) leading = false;
+	var waiting = false;
+	var poll = function() {
+		waiting = true;
+		thx_Timer.delay(callback,delayms);
+	};
+	return function() {
+		if(leading) {
+			leading = false;
+			callback();
+			return;
+		}
+		if(waiting) return;
+		poll();
+	};
+};
+thx_Timer.repeat = function(callback,delayms) {
+	return (function(f,id) {
+		return function() {
+			f(id);
+		};
+	})(thx_Timer.clear,setInterval(callback,delayms));
+};
+thx_Timer.delay = function(callback,delayms) {
+	return (function(f,id) {
+		return function() {
+			f(id);
+		};
+	})(thx_Timer.clear,setTimeout(callback,delayms));
+};
+thx_Timer.frame = function(callback) {
+	var cancelled = false;
+	var f = thx_Functions.noop;
+	var current = performance.now();
+	var next;
+	f = function() {
+		if(cancelled) return;
+		next = performance.now();
+		callback(next - current);
+		current = next;
+		requestAnimationFrame(f);
+	};
+	requestAnimationFrame(f);
+	return function() {
+		cancelled = true;
+	};
+};
+thx_Timer.nextFrame = function(callback) {
+	var id = requestAnimationFrame(callback);
+	return function() {
+		cancelAnimationFrame(id);
+	};
+};
+thx_Timer.immediate = function(callback) {
+	return (function(f,id) {
+		return function() {
+			f(id);
+		};
+	})(thx_Timer.clear,setImmediate(callback));
+};
+thx_Timer.clear = function(id) {
+	clearTimeout(id);
+	return;
+};
+thx_Timer.time = function() {
+	return performance.now();
+};
+var thx__$Tuple_Tuple0_$Impl_$ = {};
+thx__$Tuple_Tuple0_$Impl_$.__name__ = ["thx","_Tuple","Tuple0_Impl_"];
+thx__$Tuple_Tuple0_$Impl_$._new = function() {
+	return thx_Nil.nil;
+};
+thx__$Tuple_Tuple0_$Impl_$["with"] = function(this1,v) {
+	return v;
+};
+thx__$Tuple_Tuple0_$Impl_$.toString = function(this1) {
+	return "Tuple0()";
+};
+thx__$Tuple_Tuple0_$Impl_$.toNil = function(this1) {
+	return this1;
+};
+thx__$Tuple_Tuple0_$Impl_$.nilToTuple = function(v) {
+	return thx_Nil.nil;
+};
+var thx__$Tuple_Tuple1_$Impl_$ = {};
+thx__$Tuple_Tuple1_$Impl_$.__name__ = ["thx","_Tuple","Tuple1_Impl_"];
+thx__$Tuple_Tuple1_$Impl_$._new = function(_0) {
+	return _0;
+};
+thx__$Tuple_Tuple1_$Impl_$.get__0 = function(this1) {
+	return this1;
+};
+thx__$Tuple_Tuple1_$Impl_$["with"] = function(this1,v) {
+	return { _0 : this1, _1 : v};
+};
+thx__$Tuple_Tuple1_$Impl_$.toString = function(this1) {
+	return "Tuple1(" + Std.string(this1) + ")";
+};
+thx__$Tuple_Tuple1_$Impl_$.arrayToTuple = function(v) {
+	return v[0];
+};
+var thx__$Tuple_Tuple2_$Impl_$ = {};
+thx__$Tuple_Tuple2_$Impl_$.__name__ = ["thx","_Tuple","Tuple2_Impl_"];
+thx__$Tuple_Tuple2_$Impl_$._new = function(_0,_1) {
+	return { _0 : _0, _1 : _1};
+};
+thx__$Tuple_Tuple2_$Impl_$.get_left = function(this1) {
+	return this1._0;
+};
+thx__$Tuple_Tuple2_$Impl_$.get_right = function(this1) {
+	return this1._1;
+};
+thx__$Tuple_Tuple2_$Impl_$.flip = function(this1) {
+	return { _0 : this1._1, _1 : this1._0};
+};
+thx__$Tuple_Tuple2_$Impl_$.dropLeft = function(this1) {
+	return this1._1;
+};
+thx__$Tuple_Tuple2_$Impl_$.dropRight = function(this1) {
+	return this1._0;
+};
+thx__$Tuple_Tuple2_$Impl_$["with"] = function(this1,v) {
+	return { _0 : this1._0, _1 : this1._1, _2 : v};
+};
+thx__$Tuple_Tuple2_$Impl_$.toString = function(this1) {
+	return "Tuple2(" + Std.string(this1._0) + "," + Std.string(this1._1) + ")";
+};
+thx__$Tuple_Tuple2_$Impl_$.arrayToTuple2 = function(v) {
+	return { _0 : v[0], _1 : v[1]};
+};
+var thx__$Tuple_Tuple3_$Impl_$ = {};
+thx__$Tuple_Tuple3_$Impl_$.__name__ = ["thx","_Tuple","Tuple3_Impl_"];
+thx__$Tuple_Tuple3_$Impl_$._new = function(_0,_1,_2) {
+	return { _0 : _0, _1 : _1, _2 : _2};
+};
+thx__$Tuple_Tuple3_$Impl_$.flip = function(this1) {
+	return { _0 : this1._2, _1 : this1._1, _2 : this1._0};
+};
+thx__$Tuple_Tuple3_$Impl_$.dropLeft = function(this1) {
+	return { _0 : this1._1, _1 : this1._2};
+};
+thx__$Tuple_Tuple3_$Impl_$.dropRight = function(this1) {
+	return { _0 : this1._0, _1 : this1._1};
+};
+thx__$Tuple_Tuple3_$Impl_$["with"] = function(this1,v) {
+	return { _0 : this1._0, _1 : this1._1, _2 : this1._2, _3 : v};
+};
+thx__$Tuple_Tuple3_$Impl_$.toString = function(this1) {
+	return "Tuple3(" + Std.string(this1._0) + "," + Std.string(this1._1) + "," + Std.string(this1._2) + ")";
+};
+thx__$Tuple_Tuple3_$Impl_$.arrayToTuple3 = function(v) {
+	return { _0 : v[0], _1 : v[1], _2 : v[2]};
+};
+var thx__$Tuple_Tuple4_$Impl_$ = {};
+thx__$Tuple_Tuple4_$Impl_$.__name__ = ["thx","_Tuple","Tuple4_Impl_"];
+thx__$Tuple_Tuple4_$Impl_$._new = function(_0,_1,_2,_3) {
+	return { _0 : _0, _1 : _1, _2 : _2, _3 : _3};
+};
+thx__$Tuple_Tuple4_$Impl_$.flip = function(this1) {
+	return { _0 : this1._3, _1 : this1._2, _2 : this1._1, _3 : this1._0};
+};
+thx__$Tuple_Tuple4_$Impl_$.dropLeft = function(this1) {
+	return { _0 : this1._1, _1 : this1._2, _2 : this1._3};
+};
+thx__$Tuple_Tuple4_$Impl_$.dropRight = function(this1) {
+	return { _0 : this1._0, _1 : this1._1, _2 : this1._2};
+};
+thx__$Tuple_Tuple4_$Impl_$["with"] = function(this1,v) {
+	return { _0 : this1._0, _1 : this1._1, _2 : this1._2, _3 : this1._3, _4 : v};
+};
+thx__$Tuple_Tuple4_$Impl_$.toString = function(this1) {
+	return "Tuple4(" + Std.string(this1._0) + "," + Std.string(this1._1) + "," + Std.string(this1._2) + "," + Std.string(this1._3) + ")";
+};
+thx__$Tuple_Tuple4_$Impl_$.arrayToTuple4 = function(v) {
+	return { _0 : v[0], _1 : v[1], _2 : v[2], _3 : v[3]};
+};
+var thx__$Tuple_Tuple5_$Impl_$ = {};
+thx__$Tuple_Tuple5_$Impl_$.__name__ = ["thx","_Tuple","Tuple5_Impl_"];
+thx__$Tuple_Tuple5_$Impl_$._new = function(_0,_1,_2,_3,_4) {
+	return { _0 : _0, _1 : _1, _2 : _2, _3 : _3, _4 : _4};
+};
+thx__$Tuple_Tuple5_$Impl_$.flip = function(this1) {
+	return { _0 : this1._4, _1 : this1._3, _2 : this1._2, _3 : this1._1, _4 : this1._0};
+};
+thx__$Tuple_Tuple5_$Impl_$.dropLeft = function(this1) {
+	return { _0 : this1._1, _1 : this1._2, _2 : this1._3, _3 : this1._4};
+};
+thx__$Tuple_Tuple5_$Impl_$.dropRight = function(this1) {
+	return { _0 : this1._0, _1 : this1._1, _2 : this1._2, _3 : this1._3};
+};
+thx__$Tuple_Tuple5_$Impl_$["with"] = function(this1,v) {
+	return { _0 : this1._0, _1 : this1._1, _2 : this1._2, _3 : this1._3, _4 : this1._4, _5 : v};
+};
+thx__$Tuple_Tuple5_$Impl_$.toString = function(this1) {
+	return "Tuple5(" + Std.string(this1._0) + "," + Std.string(this1._1) + "," + Std.string(this1._2) + "," + Std.string(this1._3) + "," + Std.string(this1._4) + ")";
+};
+thx__$Tuple_Tuple5_$Impl_$.arrayToTuple5 = function(v) {
+	return { _0 : v[0], _1 : v[1], _2 : v[2], _3 : v[3], _4 : v[4]};
+};
+var thx__$Tuple_Tuple6_$Impl_$ = {};
+thx__$Tuple_Tuple6_$Impl_$.__name__ = ["thx","_Tuple","Tuple6_Impl_"];
+thx__$Tuple_Tuple6_$Impl_$._new = function(_0,_1,_2,_3,_4,_5) {
+	return { _0 : _0, _1 : _1, _2 : _2, _3 : _3, _4 : _4, _5 : _5};
+};
+thx__$Tuple_Tuple6_$Impl_$.flip = function(this1) {
+	return { _0 : this1._5, _1 : this1._4, _2 : this1._3, _3 : this1._2, _4 : this1._1, _5 : this1._0};
+};
+thx__$Tuple_Tuple6_$Impl_$.dropLeft = function(this1) {
+	return { _0 : this1._1, _1 : this1._2, _2 : this1._3, _3 : this1._4, _4 : this1._5};
+};
+thx__$Tuple_Tuple6_$Impl_$.dropRight = function(this1) {
+	return { _0 : this1._0, _1 : this1._1, _2 : this1._2, _3 : this1._3, _4 : this1._4};
+};
+thx__$Tuple_Tuple6_$Impl_$.toString = function(this1) {
+	return "Tuple6(" + Std.string(this1._0) + "," + Std.string(this1._1) + "," + Std.string(this1._2) + "," + Std.string(this1._3) + "," + Std.string(this1._4) + "," + Std.string(this1._5) + ")";
+};
+thx__$Tuple_Tuple6_$Impl_$.arrayToTuple6 = function(v) {
+	return { _0 : v[0], _1 : v[1], _2 : v[2], _3 : v[3], _4 : v[4], _5 : v[5]};
+};
 var thx_color__$CIELCh_CIELCh_$Impl_$ = {};
 thx_color__$CIELCh_CIELCh_$Impl_$.__name__ = ["thx","color","_CIELCh","CIELCh_Impl_"];
 thx_color__$CIELCh_CIELCh_$Impl_$.create = function(lightness,chroma,hue) {
-	var channels = [lightness,chroma,thx_core_Floats.wrapCircular(hue,360)];
+	var channels = [lightness,chroma,thx_Floats.wrapCircular(hue,360)];
 	return channels;
 };
 thx_color__$CIELCh_CIELCh_$Impl_$.fromFloats = function(arr) {
-	thx_core_ArrayFloats.resize(arr,3);
+	thx_ArrayFloats.resize(arr,3);
 	return thx_color__$CIELCh_CIELCh_$Impl_$.create(arr[0],arr[1],arr[2]);
 };
 thx_color__$CIELCh_CIELCh_$Impl_$.fromString = function(color) {
@@ -17723,7 +18966,7 @@ thx_color__$CIELCh_CIELCh_$Impl_$.complement = function(this1) {
 	return thx_color__$CIELCh_CIELCh_$Impl_$.rotate(this1,180);
 };
 thx_color__$CIELCh_CIELCh_$Impl_$.interpolate = function(this1,other,t) {
-	var channels = [thx_core_Floats.interpolate(t,this1[0],other[0]),thx_core_Floats.interpolate(t,this1[1],other[1]),thx_core_Floats.interpolateAngle(t,this1[2],other[2],360)];
+	var channels = [thx_Floats.interpolate(t,this1[0],other[0]),thx_Floats.interpolate(t,this1[1],other[1]),thx_Floats.interpolateAngle(t,this1[2],other[2],360)];
 	return channels;
 };
 thx_color__$CIELCh_CIELCh_$Impl_$.rotate = function(this1,angle) {
@@ -17758,7 +19001,7 @@ thx_color__$CIELCh_CIELCh_$Impl_$.withChroma = function(this1,newchroma) {
 	return [this1[0],newchroma,this1[2]];
 };
 thx_color__$CIELCh_CIELCh_$Impl_$.withHue = function(this1,newhue) {
-	var channels = [this1[0],this1[1],thx_core_Floats.wrapCircular(newhue,360)];
+	var channels = [this1[0],this1[1],thx_Floats.wrapCircular(newhue,360)];
 	return channels;
 };
 thx_color__$CIELCh_CIELCh_$Impl_$.equals = function(this1,other) {
@@ -17821,7 +19064,7 @@ thx_color__$CIELab_CIELab_$Impl_$.create = function(l,a,b) {
 	return [l,a,b];
 };
 thx_color__$CIELab_CIELab_$Impl_$.fromFloats = function(arr) {
-	thx_core_ArrayFloats.resize(arr,3);
+	thx_ArrayFloats.resize(arr,3);
 	return thx_color__$CIELab_CIELab_$Impl_$.create(arr[0],arr[1],arr[2]);
 };
 thx_color__$CIELab_CIELab_$Impl_$.fromString = function(color) {
@@ -17848,20 +19091,20 @@ thx_color__$CIELab_CIELab_$Impl_$.distance = function(this1,other) {
 	return (this1[0] - other[0]) * (this1[0] - other[0]) + (this1[1] - other[1]) * (this1[1] - other[1]) + (this1[2] - other[2]) * (this1[2] - other[2]);
 };
 thx_color__$CIELab_CIELab_$Impl_$.interpolate = function(this1,other,t) {
-	var channels = [thx_core_Floats.interpolate(t,this1[0],other[0]),thx_core_Floats.interpolate(t,this1[1],other[1]),thx_core_Floats.interpolate(t,this1[2],other[2])];
+	var channels = [thx_Floats.interpolate(t,this1[0],other[0]),thx_Floats.interpolate(t,this1[1],other[1]),thx_Floats.interpolate(t,this1[2],other[2])];
 	return channels;
 };
 thx_color__$CIELab_CIELab_$Impl_$.darker = function(this1,t) {
-	var channels = [thx_core_Floats.interpolate(t,this1[0],0),this1[1],this1[2]];
+	var channels = [thx_Floats.interpolate(t,this1[0],0),this1[1],this1[2]];
 	return channels;
 };
 thx_color__$CIELab_CIELab_$Impl_$.lighter = function(this1,t) {
-	var channels = [thx_core_Floats.interpolate(t,this1[0],100),this1[1],this1[2]];
+	var channels = [thx_Floats.interpolate(t,this1[0],100),this1[1],this1[2]];
 	return channels;
 };
 thx_color__$CIELab_CIELab_$Impl_$.match = function(this1,palette) {
 	var it = palette;
-	if(null == it) throw new thx_core_error_NullArgument("Iterable argument \"this\" cannot be null",{ fileName : "NullArgument.hx", lineNumber : 73, className : "thx.color._CIELab.CIELab_Impl_", methodName : "match"}); else if(!$iterator(it)().hasNext()) throw new thx_core_error_NullArgument("Iterable argument \"this\" cannot be empty",{ fileName : "NullArgument.hx", lineNumber : 75, className : "thx.color._CIELab.CIELab_Impl_", methodName : "match"});
+	if(null == it) throw new thx_error_NullArgument("Iterable argument \"this\" cannot be null",{ fileName : "NullArgument.hx", lineNumber : 73, className : "thx.color._CIELab.CIELab_Impl_", methodName : "match"}); else if(!$iterator(it)().hasNext()) throw new thx_error_NullArgument("Iterable argument \"this\" cannot be empty",{ fileName : "NullArgument.hx", lineNumber : 75, className : "thx.color._CIELab.CIELab_Impl_", methodName : "match"});
 	var dist = Infinity;
 	var closest = null;
 	var $it0 = $iterator(palette)();
@@ -17891,7 +19134,7 @@ thx_color__$CIELab_CIELab_$Impl_$.toString = function(this1) {
 	return "CIELab(" + this1[0] + "," + this1[1] + "," + this1[2] + ")";
 };
 thx_color__$CIELab_CIELab_$Impl_$.toCIELCh = function(this1) {
-	var h = thx_core_Floats.wrapCircular(Math.atan2(this1[2],this1[1]) * 180 / Math.PI,360);
+	var h = thx_Floats.wrapCircular(Math.atan2(this1[2],this1[1]) * 180 / Math.PI,360);
 	var c = Math.sqrt(this1[1] * this1[1] + this1[2] * this1[2]);
 	return [this1[0],c,h];
 };
@@ -17953,7 +19196,7 @@ thx_color__$CMY_CMY_$Impl_$.create = function(cyan,magenta,yellow) {
 	return [cyan < 0?0:cyan > 1?1:cyan,magenta < 0?0:magenta > 1?1:magenta,yellow < 0?0:yellow > 1?1:yellow];
 };
 thx_color__$CMY_CMY_$Impl_$.fromFloats = function(arr) {
-	thx_core_ArrayFloats.resize(arr,3);
+	thx_ArrayFloats.resize(arr,3);
 	return thx_color__$CMY_CMY_$Impl_$.create(arr[0],arr[1],arr[2]);
 };
 thx_color__$CMY_CMY_$Impl_$.fromString = function(color) {
@@ -17978,7 +19221,7 @@ thx_color__$CMY_CMY_$Impl_$._new = function(channels) {
 	return channels;
 };
 thx_color__$CMY_CMY_$Impl_$.interpolate = function(this1,other,t) {
-	var channels = [thx_core_Floats.interpolate(t,this1[0],other[0]),thx_core_Floats.interpolate(t,this1[1],other[1]),thx_core_Floats.interpolate(t,this1[2],other[2])];
+	var channels = [thx_Floats.interpolate(t,this1[0],other[0]),thx_Floats.interpolate(t,this1[1],other[1]),thx_Floats.interpolate(t,this1[2],other[2])];
 	return channels;
 };
 thx_color__$CMY_CMY_$Impl_$.withCyan = function(this1,newcyan) {
@@ -18048,7 +19291,7 @@ thx_color__$CMYK_CMYK_$Impl_$.create = function(cyan,magenta,yellow,black) {
 	return [cyan < 0?0:cyan > 1?1:cyan,magenta < 0?0:magenta > 1?1:magenta,yellow < 0?0:yellow > 1?1:yellow,black < 0?0:black > 1?1:black];
 };
 thx_color__$CMYK_CMYK_$Impl_$.fromFloats = function(arr) {
-	thx_core_ArrayFloats.resize(arr,4);
+	thx_ArrayFloats.resize(arr,4);
 	return thx_color__$CMYK_CMYK_$Impl_$.create(arr[0],arr[1],arr[2],arr[3]);
 };
 thx_color__$CMYK_CMYK_$Impl_$.fromString = function(color) {
@@ -18073,15 +19316,15 @@ thx_color__$CMYK_CMYK_$Impl_$._new = function(channels) {
 	return channels;
 };
 thx_color__$CMYK_CMYK_$Impl_$.darker = function(this1,t) {
-	var channels = [this1[0],this1[1],this1[2],thx_core_Floats.interpolate(t,this1[3],1)];
+	var channels = [this1[0],this1[1],this1[2],thx_Floats.interpolate(t,this1[3],1)];
 	return channels;
 };
 thx_color__$CMYK_CMYK_$Impl_$.lighter = function(this1,t) {
-	var channels = [this1[0],this1[1],this1[2],thx_core_Floats.interpolate(t,this1[3],0)];
+	var channels = [this1[0],this1[1],this1[2],thx_Floats.interpolate(t,this1[3],0)];
 	return channels;
 };
 thx_color__$CMYK_CMYK_$Impl_$.interpolate = function(this1,other,t) {
-	var channels = [thx_core_Floats.interpolate(t,this1[0],other[0]),thx_core_Floats.interpolate(t,this1[1],other[1]),thx_core_Floats.interpolate(t,this1[2],other[2]),thx_core_Floats.interpolate(t,this1[3],other[3])];
+	var channels = [thx_Floats.interpolate(t,this1[0],other[0]),thx_Floats.interpolate(t,this1[1],other[1]),thx_Floats.interpolate(t,this1[2],other[2]),thx_Floats.interpolate(t,this1[3],other[3])];
 	return channels;
 };
 thx_color__$CMYK_CMYK_$Impl_$.withCyan = function(this1,newcyan) {
@@ -18180,15 +19423,15 @@ thx_color__$Grey_Grey_$Impl_$.contrast = function(this1) {
 	if(this1 > 0.5) return thx_color__$Grey_Grey_$Impl_$.black; else return thx_color__$Grey_Grey_$Impl_$.white;
 };
 thx_color__$Grey_Grey_$Impl_$.darker = function(this1,t) {
-	var grey = thx_core_Floats.interpolate(t,this1,0);
+	var grey = thx_Floats.interpolate(t,this1,0);
 	return grey;
 };
 thx_color__$Grey_Grey_$Impl_$.lighter = function(this1,t) {
-	var grey = thx_core_Floats.interpolate(t,this1,1);
+	var grey = thx_Floats.interpolate(t,this1,1);
 	return grey;
 };
 thx_color__$Grey_Grey_$Impl_$.interpolate = function(this1,other,t) {
-	var grey = thx_core_Floats.interpolate(t,this1,other);
+	var grey = thx_Floats.interpolate(t,this1,other);
 	return grey;
 };
 thx_color__$Grey_Grey_$Impl_$.toString = function(this1) {
@@ -18239,11 +19482,11 @@ thx_color__$Grey_Grey_$Impl_$.toYxy = function(this1) {
 var thx_color__$HSL_HSL_$Impl_$ = {};
 thx_color__$HSL_HSL_$Impl_$.__name__ = ["thx","color","_HSL","HSL_Impl_"];
 thx_color__$HSL_HSL_$Impl_$.create = function(hue,saturation,lightness) {
-	var channels = [thx_core_Floats.wrapCircular(hue,360),saturation < 0?0:saturation > 1?1:saturation,lightness < 0?0:lightness > 1?1:lightness];
+	var channels = [thx_Floats.wrapCircular(hue,360),saturation < 0?0:saturation > 1?1:saturation,lightness < 0?0:lightness > 1?1:lightness];
 	return channels;
 };
 thx_color__$HSL_HSL_$Impl_$.fromFloats = function(arr) {
-	thx_core_ArrayFloats.resize(arr,3);
+	thx_ArrayFloats.resize(arr,3);
 	return thx_color__$HSL_HSL_$Impl_$.create(arr[0],arr[1],arr[2]);
 };
 thx_color__$HSL_HSL_$Impl_$.fromString = function(color) {
@@ -18277,15 +19520,15 @@ thx_color__$HSL_HSL_$Impl_$.complement = function(this1) {
 	return thx_color__$HSL_HSL_$Impl_$.rotate(this1,180);
 };
 thx_color__$HSL_HSL_$Impl_$.darker = function(this1,t) {
-	var channels = [this1[0],this1[1],thx_core_Floats.interpolate(t,this1[2],0)];
+	var channels = [this1[0],this1[1],thx_Floats.interpolate(t,this1[2],0)];
 	return channels;
 };
 thx_color__$HSL_HSL_$Impl_$.lighter = function(this1,t) {
-	var channels = [this1[0],this1[1],thx_core_Floats.interpolate(t,this1[2],1)];
+	var channels = [this1[0],this1[1],thx_Floats.interpolate(t,this1[2],1)];
 	return channels;
 };
 thx_color__$HSL_HSL_$Impl_$.interpolate = function(this1,other,t) {
-	var channels = [thx_core_Floats.interpolateAngle(t,this1[0],other[0],360),thx_core_Floats.interpolate(t,this1[1],other[1]),thx_core_Floats.interpolate(t,this1[2],other[2])];
+	var channels = [thx_Floats.interpolateAngle(t,this1[0],other[0],360),thx_Floats.interpolate(t,this1[1],other[1]),thx_Floats.interpolate(t,this1[2],other[2])];
 	return channels;
 };
 thx_color__$HSL_HSL_$Impl_$.rotate = function(this1,angle) {
@@ -18318,7 +19561,7 @@ thx_color__$HSL_HSL_$Impl_$.withAlpha = function(this1,alpha) {
 	return channels;
 };
 thx_color__$HSL_HSL_$Impl_$.withHue = function(this1,newhue) {
-	var channels = [thx_core_Floats.wrapCircular(newhue,360),this1[1],this1[2]];
+	var channels = [thx_Floats.wrapCircular(newhue,360),this1[1],this1[2]];
 	return channels;
 };
 thx_color__$HSL_HSL_$Impl_$.withLightness = function(this1,newlightness) {
@@ -18389,17 +19632,17 @@ thx_color__$HSL_HSL_$Impl_$._c = function(d,s,l) {
 	var m2;
 	if(l <= 0.5) m2 = l * (1 + s); else m2 = l + s - l * s;
 	var m1 = 2 * l - m2;
-	d = thx_core_Floats.wrapCircular(d,360);
+	d = thx_Floats.wrapCircular(d,360);
 	if(d < 60) return m1 + (m2 - m1) * d / 60; else if(d < 180) return m2; else if(d < 240) return m1 + (m2 - m1) * (240 - d) / 60; else return m1;
 };
 var thx_color__$HSLA_HSLA_$Impl_$ = {};
 thx_color__$HSLA_HSLA_$Impl_$.__name__ = ["thx","color","_HSLA","HSLA_Impl_"];
 thx_color__$HSLA_HSLA_$Impl_$.create = function(hue,saturation,lightness,alpha) {
-	var channels = [thx_core_Floats.wrapCircular(hue,360),saturation < 0?0:saturation > 1?1:saturation,lightness < 0?0:lightness > 1?1:lightness,alpha < 0?0:alpha > 1?1:alpha];
+	var channels = [thx_Floats.wrapCircular(hue,360),saturation < 0?0:saturation > 1?1:saturation,lightness < 0?0:lightness > 1?1:lightness,alpha < 0?0:alpha > 1?1:alpha];
 	return channels;
 };
 thx_color__$HSLA_HSLA_$Impl_$.fromFloats = function(arr) {
-	thx_core_ArrayFloats.resize(arr,4);
+	thx_ArrayFloats.resize(arr,4);
 	return thx_color__$HSLA_HSLA_$Impl_$.create(arr[0],arr[1],arr[2],arr[3]);
 };
 thx_color__$HSLA_HSLA_$Impl_$.fromString = function(color) {
@@ -18440,23 +19683,23 @@ thx_color__$HSLA_HSLA_$Impl_$.complement = function(this1) {
 	return thx_color__$HSLA_HSLA_$Impl_$.rotate(this1,180);
 };
 thx_color__$HSLA_HSLA_$Impl_$.darker = function(this1,t) {
-	var channels = [this1[0],this1[1],thx_core_Floats.interpolate(t,this1[2],0),this1[3]];
+	var channels = [this1[0],this1[1],thx_Floats.interpolate(t,this1[2],0),this1[3]];
 	return channels;
 };
 thx_color__$HSLA_HSLA_$Impl_$.lighter = function(this1,t) {
-	var channels = [this1[0],this1[1],thx_core_Floats.interpolate(t,this1[2],1),this1[3]];
+	var channels = [this1[0],this1[1],thx_Floats.interpolate(t,this1[2],1),this1[3]];
 	return channels;
 };
 thx_color__$HSLA_HSLA_$Impl_$.transparent = function(this1,t) {
-	var channels = [this1[0],this1[1],this1[2],thx_core_Floats.interpolate(t,this1[3],0)];
+	var channels = [this1[0],this1[1],this1[2],thx_Floats.interpolate(t,this1[3],0)];
 	return channels;
 };
 thx_color__$HSLA_HSLA_$Impl_$.opaque = function(this1,t) {
-	var channels = [this1[0],this1[1],this1[2],thx_core_Floats.interpolate(t,this1[3],1)];
+	var channels = [this1[0],this1[1],this1[2],thx_Floats.interpolate(t,this1[3],1)];
 	return channels;
 };
 thx_color__$HSLA_HSLA_$Impl_$.interpolate = function(this1,other,t) {
-	var channels = [thx_core_Floats.interpolateAngle(t,this1[0],other[0]),thx_core_Floats.interpolate(t,this1[1],other[1]),thx_core_Floats.interpolate(t,this1[2],other[2]),thx_core_Floats.interpolate(t,this1[3],other[3])];
+	var channels = [thx_Floats.interpolateAngle(t,this1[0],other[0]),thx_Floats.interpolate(t,this1[1],other[1]),thx_Floats.interpolate(t,this1[2],other[2]),thx_Floats.interpolate(t,this1[3],other[3])];
 	return channels;
 };
 thx_color__$HSLA_HSLA_$Impl_$.rotate = function(this1,angle) {
@@ -18472,7 +19715,7 @@ thx_color__$HSLA_HSLA_$Impl_$.withAlpha = function(this1,newalpha) {
 	return [this1[0],this1[1],this1[2],newalpha < 0?0:newalpha > 1?1:newalpha];
 };
 thx_color__$HSLA_HSLA_$Impl_$.withHue = function(this1,newhue) {
-	var channels = [thx_core_Floats.wrapCircular(newhue,360),this1[1],this1[2],this1[3]];
+	var channels = [thx_Floats.wrapCircular(newhue,360),this1[1],this1[2],this1[3]];
 	return channels;
 };
 thx_color__$HSLA_HSLA_$Impl_$.withLightness = function(this1,newlightness) {
@@ -18523,17 +19766,17 @@ thx_color__$HSLA_HSLA_$Impl_$._c = function(d,s,l) {
 	var m2;
 	if(l <= 0.5) m2 = l * (1 + s); else m2 = l + s - l * s;
 	var m1 = 2 * l - m2;
-	d = thx_core_Floats.wrapCircular(d,360);
+	d = thx_Floats.wrapCircular(d,360);
 	if(d < 60) return m1 + (m2 - m1) * d / 60; else if(d < 180) return m2; else if(d < 240) return m1 + (m2 - m1) * (240 - d) / 60; else return m1;
 };
 var thx_color__$HSV_HSV_$Impl_$ = {};
 thx_color__$HSV_HSV_$Impl_$.__name__ = ["thx","color","_HSV","HSV_Impl_"];
 thx_color__$HSV_HSV_$Impl_$.create = function(hue,saturation,lightness) {
-	var channels = [thx_core_Floats.wrapCircular(hue,360),saturation < 0?0:saturation > 1?1:saturation,lightness < 0?0:lightness > 1?1:lightness];
+	var channels = [thx_Floats.wrapCircular(hue,360),saturation < 0?0:saturation > 1?1:saturation,lightness < 0?0:lightness > 1?1:lightness];
 	return channels;
 };
 thx_color__$HSV_HSV_$Impl_$.fromFloats = function(arr) {
-	thx_core_ArrayFloats.resize(arr,3);
+	thx_ArrayFloats.resize(arr,3);
 	return thx_color__$HSV_HSV_$Impl_$.create(arr[0],arr[1],arr[2]);
 };
 thx_color__$HSV_HSV_$Impl_$.fromString = function(color) {
@@ -18567,7 +19810,7 @@ thx_color__$HSV_HSV_$Impl_$.complement = function(this1) {
 	return thx_color__$HSV_HSV_$Impl_$.rotate(this1,180);
 };
 thx_color__$HSV_HSV_$Impl_$.interpolate = function(this1,other,t) {
-	var channels = [thx_core_Floats.interpolateAngle(t,this1[0],other[0]),thx_core_Floats.interpolate(t,this1[1],other[1]),thx_core_Floats.interpolate(t,this1[2],other[2])];
+	var channels = [thx_Floats.interpolateAngle(t,this1[0],other[0]),thx_Floats.interpolate(t,this1[1],other[1]),thx_Floats.interpolate(t,this1[2],other[2])];
 	return channels;
 };
 thx_color__$HSV_HSV_$Impl_$.rotate = function(this1,angle) {
@@ -18600,7 +19843,7 @@ thx_color__$HSV_HSV_$Impl_$.withAlpha = function(this1,alpha) {
 	return channels;
 };
 thx_color__$HSV_HSV_$Impl_$.withHue = function(this1,newhue) {
-	var channels = [thx_core_Floats.wrapCircular(newhue,360),this1[1],this1[2]];
+	var channels = [thx_Floats.wrapCircular(newhue,360),this1[1],this1[2]];
 	return channels;
 };
 thx_color__$HSV_HSV_$Impl_$.withValue = function(this1,newvalue) {
@@ -18712,11 +19955,11 @@ thx_color__$HSV_HSV_$Impl_$.get_value = function(this1) {
 var thx_color__$HSVA_HSVA_$Impl_$ = {};
 thx_color__$HSVA_HSVA_$Impl_$.__name__ = ["thx","color","_HSVA","HSVA_Impl_"];
 thx_color__$HSVA_HSVA_$Impl_$.create = function(hue,saturation,value,alpha) {
-	var channels = [thx_core_Floats.wrapCircular(hue,360),saturation < 0?0:saturation > 1?1:saturation,value < 0?0:value > 1?1:value,alpha < 0?0:alpha > 1?1:alpha];
+	var channels = [thx_Floats.wrapCircular(hue,360),saturation < 0?0:saturation > 1?1:saturation,value < 0?0:value > 1?1:value,alpha < 0?0:alpha > 1?1:alpha];
 	return channels;
 };
 thx_color__$HSVA_HSVA_$Impl_$.fromFloats = function(arr) {
-	thx_core_ArrayFloats.resize(arr,4);
+	thx_ArrayFloats.resize(arr,4);
 	return thx_color__$HSVA_HSVA_$Impl_$.create(arr[0],arr[1],arr[2],arr[3]);
 };
 thx_color__$HSVA_HSVA_$Impl_$.fromString = function(color) {
@@ -18757,15 +20000,15 @@ thx_color__$HSVA_HSVA_$Impl_$.complement = function(this1) {
 	return thx_color__$HSVA_HSVA_$Impl_$.rotate(this1,180);
 };
 thx_color__$HSVA_HSVA_$Impl_$.transparent = function(this1,t) {
-	var channels = [this1[0],this1[1],this1[2],thx_core_Floats.interpolate(t,this1[3],0)];
+	var channels = [this1[0],this1[1],this1[2],thx_Floats.interpolate(t,this1[3],0)];
 	return channels;
 };
 thx_color__$HSVA_HSVA_$Impl_$.opaque = function(this1,t) {
-	var channels = [this1[0],this1[1],this1[2],thx_core_Floats.interpolate(t,this1[3],1)];
+	var channels = [this1[0],this1[1],this1[2],thx_Floats.interpolate(t,this1[3],1)];
 	return channels;
 };
 thx_color__$HSVA_HSVA_$Impl_$.interpolate = function(this1,other,t) {
-	var channels = [thx_core_Floats.interpolateAngle(t,this1[0],other[0]),thx_core_Floats.interpolate(t,this1[1],other[1]),thx_core_Floats.interpolate(t,this1[2],other[2]),thx_core_Floats.interpolate(t,this1[3],other[3])];
+	var channels = [thx_Floats.interpolateAngle(t,this1[0],other[0]),thx_Floats.interpolate(t,this1[1],other[1]),thx_Floats.interpolate(t,this1[2],other[2]),thx_Floats.interpolate(t,this1[3],other[3])];
 	return channels;
 };
 thx_color__$HSVA_HSVA_$Impl_$.rotate = function(this1,angle) {
@@ -18781,7 +20024,7 @@ thx_color__$HSVA_HSVA_$Impl_$.withAlpha = function(this1,newalpha) {
 	return [this1[0],this1[1],this1[2],newalpha < 0?0:newalpha > 1?1:newalpha];
 };
 thx_color__$HSVA_HSVA_$Impl_$.withHue = function(this1,newhue) {
-	var channels = [thx_core_Floats.wrapCircular(newhue,360),this1[1],this1[2],this1[3]];
+	var channels = [thx_Floats.wrapCircular(newhue,360),this1[1],this1[2],this1[3]];
 	return channels;
 };
 thx_color__$HSVA_HSVA_$Impl_$.withLightness = function(this1,newvalue) {
@@ -18897,7 +20140,7 @@ thx_color__$RGB_RGB_$Impl_$.fromString = function(color) {
 	}
 };
 thx_color__$RGB_RGB_$Impl_$.fromInts = function(arr) {
-	thx_core_ArrayInts.resize(arr,3);
+	thx_ArrayInts.resize(arr,3);
 	return thx_color__$RGB_RGB_$Impl_$.create(arr[0],arr[1],arr[2]);
 };
 thx_color__$RGB_RGB_$Impl_$._new = function(rgb) {
@@ -18988,7 +20231,7 @@ thx_color__$RGBA_RGBA_$Impl_$.create = function(red,green,blue,alpha) {
 	return (red & 255) << 24 | (green & 255) << 16 | (blue & 255) << 8 | alpha & 255;
 };
 thx_color__$RGBA_RGBA_$Impl_$.fromFloats = function(arr) {
-	var ints = thx_core_ArrayFloats.resize(arr,4).map(function(_) {
+	var ints = thx_ArrayFloats.resize(arr,4).map(function(_) {
 		return Math.round(_ * 255);
 	});
 	return thx_color__$RGBA_RGBA_$Impl_$.create(ints[0],ints[1],ints[2],ints[3]);
@@ -18997,7 +20240,7 @@ thx_color__$RGBA_RGBA_$Impl_$.fromInt = function(rgba) {
 	return rgba;
 };
 thx_color__$RGBA_RGBA_$Impl_$.fromInts = function(arr) {
-	thx_core_ArrayInts.resize(arr,4);
+	thx_ArrayInts.resize(arr,4);
 	return thx_color__$RGBA_RGBA_$Impl_$.create(arr[0],arr[1],arr[2],arr[3]);
 };
 thx_color__$RGBA_RGBA_$Impl_$.fromString = function(color) {
@@ -19096,11 +20339,11 @@ thx_color__$RGBX_RGBX_$Impl_$.create = function(red,green,blue) {
 	return [red < 0?0:red > 1?1:red,green < 0?0:green > 1?1:green,blue < 0?0:blue > 1?1:blue];
 };
 thx_color__$RGBX_RGBX_$Impl_$.fromFloats = function(arr) {
-	thx_core_ArrayFloats.resize(arr,3);
+	thx_ArrayFloats.resize(arr,3);
 	return thx_color__$RGBX_RGBX_$Impl_$.create(arr[0],arr[1],arr[2]);
 };
 thx_color__$RGBX_RGBX_$Impl_$.fromInts = function(arr) {
-	thx_core_ArrayInts.resize(arr,3);
+	thx_ArrayInts.resize(arr,3);
 	return thx_color__$RGBX_RGBX_$Impl_$.create(arr[0] / 255,arr[1] / 255,arr[2] / 255);
 };
 thx_color__$RGBX_RGBX_$Impl_$.fromString = function(color) {
@@ -19125,15 +20368,15 @@ thx_color__$RGBX_RGBX_$Impl_$._new = function(channels) {
 	return channels;
 };
 thx_color__$RGBX_RGBX_$Impl_$.darker = function(this1,t) {
-	var channels = [thx_core_Floats.interpolate(t,this1[0],0),thx_core_Floats.interpolate(t,this1[1],0),thx_core_Floats.interpolate(t,this1[2],0)];
+	var channels = [thx_Floats.interpolate(t,this1[0],0),thx_Floats.interpolate(t,this1[1],0),thx_Floats.interpolate(t,this1[2],0)];
 	return channels;
 };
 thx_color__$RGBX_RGBX_$Impl_$.lighter = function(this1,t) {
-	var channels = [thx_core_Floats.interpolate(t,this1[0],1),thx_core_Floats.interpolate(t,this1[1],1),thx_core_Floats.interpolate(t,this1[2],1)];
+	var channels = [thx_Floats.interpolate(t,this1[0],1),thx_Floats.interpolate(t,this1[1],1),thx_Floats.interpolate(t,this1[2],1)];
 	return channels;
 };
 thx_color__$RGBX_RGBX_$Impl_$.interpolate = function(this1,other,t) {
-	var channels = [thx_core_Floats.interpolate(t,this1[0],other[0]),thx_core_Floats.interpolate(t,this1[1],other[1]),thx_core_Floats.interpolate(t,this1[2],other[2])];
+	var channels = [thx_Floats.interpolate(t,this1[0],other[0]),thx_Floats.interpolate(t,this1[1],other[1]),thx_Floats.interpolate(t,this1[2],other[2])];
 	return channels;
 };
 thx_color__$RGBX_RGBX_$Impl_$.toCSS3 = function(this1) {
@@ -19270,11 +20513,11 @@ thx_color__$RGBXA_RGBXA_$Impl_$.create = function(red,green,blue,alpha) {
 	return [red < 0?0:red > 1?1:red,green < 0?0:green > 1?1:green,blue < 0?0:blue > 1?1:blue,alpha < 0?0:alpha > 1?1:alpha];
 };
 thx_color__$RGBXA_RGBXA_$Impl_$.fromFloats = function(arr) {
-	thx_core_ArrayFloats.resize(arr,4);
+	thx_ArrayFloats.resize(arr,4);
 	return thx_color__$RGBXA_RGBXA_$Impl_$.create(arr[0],arr[1],arr[2],arr[3]);
 };
 thx_color__$RGBXA_RGBXA_$Impl_$.fromInts = function(arr) {
-	thx_core_ArrayInts.resize(arr,4);
+	thx_ArrayInts.resize(arr,4);
 	return thx_color__$RGBXA_RGBXA_$Impl_$.create(arr[0] / 255,arr[1] / 255,arr[2] / 255,arr[3] / 255);
 };
 thx_color__$RGBXA_RGBXA_$Impl_$.fromString = function(color) {
@@ -19307,15 +20550,15 @@ thx_color__$RGBXA_RGBXA_$Impl_$.lighter = function(this1,t) {
 	return thx_color__$RGBX_RGBX_$Impl_$.withAlpha(thx_color__$RGBX_RGBX_$Impl_$.lighter(thx_color__$RGBXA_RGBXA_$Impl_$.toRGBX(this1),t),thx_color__$RGBXA_RGBXA_$Impl_$.get_alpha(this1));
 };
 thx_color__$RGBXA_RGBXA_$Impl_$.transparent = function(this1,t) {
-	var channels = [this1[0],this1[1],this1[2],thx_core_Ints.interpolate(t,this1[3],0)];
+	var channels = [this1[0],this1[1],this1[2],thx_Ints.interpolate(t,this1[3],0)];
 	return channels;
 };
 thx_color__$RGBXA_RGBXA_$Impl_$.opaque = function(this1,t) {
-	var channels = [this1[0],this1[1],this1[2],thx_core_Ints.interpolate(t,this1[3],1)];
+	var channels = [this1[0],this1[1],this1[2],thx_Ints.interpolate(t,this1[3],1)];
 	return channels;
 };
 thx_color__$RGBXA_RGBXA_$Impl_$.interpolate = function(this1,other,t) {
-	var channels = [thx_core_Ints.interpolate(t,this1[0],other[0]),thx_core_Ints.interpolate(t,this1[1],other[1]),thx_core_Ints.interpolate(t,this1[2],other[2]),thx_core_Ints.interpolate(t,this1[3],other[3])];
+	var channels = [thx_Ints.interpolate(t,this1[0],other[0]),thx_Ints.interpolate(t,this1[1],other[1]),thx_Ints.interpolate(t,this1[2],other[2]),thx_Ints.interpolate(t,this1[3],other[3])];
 	return channels;
 };
 thx_color__$RGBXA_RGBXA_$Impl_$.withAlpha = function(this1,newalpha) {
@@ -19393,7 +20636,7 @@ thx_color__$XYZ_XYZ_$Impl_$.create = function(x,y,z) {
 	return [x,y,z];
 };
 thx_color__$XYZ_XYZ_$Impl_$.fromFloats = function(arr) {
-	thx_core_ArrayFloats.resize(arr,3);
+	thx_ArrayFloats.resize(arr,3);
 	return thx_color__$XYZ_XYZ_$Impl_$.create(arr[0],arr[1],arr[2]);
 };
 thx_color__$XYZ_XYZ_$Impl_$.fromString = function(color) {
@@ -19418,7 +20661,7 @@ thx_color__$XYZ_XYZ_$Impl_$._new = function(channels) {
 	return channels;
 };
 thx_color__$XYZ_XYZ_$Impl_$.interpolate = function(this1,other,t) {
-	var channels = [thx_core_Floats.interpolate(t,this1[0],other[0]),thx_core_Floats.interpolate(t,this1[1],other[1]),thx_core_Floats.interpolate(t,this1[2],other[2])];
+	var channels = [thx_Floats.interpolate(t,this1[0],other[0]),thx_Floats.interpolate(t,this1[1],other[1]),thx_Floats.interpolate(t,this1[2],other[2])];
 	return channels;
 };
 thx_color__$XYZ_XYZ_$Impl_$.withX = function(this1,newx) {
@@ -19504,7 +20747,7 @@ thx_color__$Yxy_Yxy_$Impl_$.create = function(y1,x,y2) {
 	return [y1,x,y2];
 };
 thx_color__$Yxy_Yxy_$Impl_$.fromFloats = function(arr) {
-	thx_core_ArrayFloats.resize(arr,3);
+	thx_ArrayFloats.resize(arr,3);
 	return thx_color__$Yxy_Yxy_$Impl_$.create(arr[0],arr[1],arr[2]);
 };
 thx_color__$Yxy_Yxy_$Impl_$.fromString = function(color) {
@@ -19529,7 +20772,7 @@ thx_color__$Yxy_Yxy_$Impl_$._new = function(channels) {
 	return channels;
 };
 thx_color__$Yxy_Yxy_$Impl_$.interpolate = function(this1,other,t) {
-	var channels = [thx_core_Floats.interpolate(t,this1[0],other[0]),thx_core_Floats.interpolate(t,this1[1],other[1]),thx_core_Floats.interpolate(t,this1[2],other[2])];
+	var channels = [thx_Floats.interpolate(t,this1[0],other[0]),thx_Floats.interpolate(t,this1[1],other[1]),thx_Floats.interpolate(t,this1[2],other[2])];
 	return channels;
 };
 thx_color__$Yxy_Yxy_$Impl_$.withY1 = function(this1,newy1) {
@@ -19705,25 +20948,25 @@ thx_color_parse_ColorParser.prototype = {
 		try {
 			switch(unit) {
 			case "%":
-				if(thx_core_Floats.canParse(value)) return thx_color_parse_ChannelInfo.CIPercent(thx_core_Floats.parse(value)); else return null;
+				if(thx_Floats.canParse(value)) return thx_color_parse_ChannelInfo.CIPercent(thx_Floats.parse(value)); else return null;
 				break;
 			case "deg":
-				if(thx_core_Floats.canParse(value)) return thx_color_parse_ChannelInfo.CIDegree(thx_core_Floats.parse(value)); else return null;
+				if(thx_Floats.canParse(value)) return thx_color_parse_ChannelInfo.CIDegree(thx_Floats.parse(value)); else return null;
 				break;
 			case "DEG":
-				if(thx_core_Floats.canParse(value)) return thx_color_parse_ChannelInfo.CIDegree(thx_core_Floats.parse(value)); else return null;
+				if(thx_Floats.canParse(value)) return thx_color_parse_ChannelInfo.CIDegree(thx_Floats.parse(value)); else return null;
 				break;
 			case "rad":
-				if(thx_core_Floats.canParse(value)) return thx_color_parse_ChannelInfo.CIDegree(thx_core_Floats.parse(value) * 180 / Math.PI); else return null;
+				if(thx_Floats.canParse(value)) return thx_color_parse_ChannelInfo.CIDegree(thx_Floats.parse(value) * 180 / Math.PI); else return null;
 				break;
 			case "RAD":
-				if(thx_core_Floats.canParse(value)) return thx_color_parse_ChannelInfo.CIDegree(thx_core_Floats.parse(value) * 180 / Math.PI); else return null;
+				if(thx_Floats.canParse(value)) return thx_color_parse_ChannelInfo.CIDegree(thx_Floats.parse(value) * 180 / Math.PI); else return null;
 				break;
 			case "":
-				if(thx_core_Ints.canParse(value)) {
-					var i = thx_core_Ints.parse(value);
+				if(thx_Ints.canParse(value)) {
+					var i = thx_Ints.parse(value);
 					if(i == 0) return thx_color_parse_ChannelInfo.CIBool(false); else if(i == 1) return thx_color_parse_ChannelInfo.CIBool(true); else if(i < 256) return thx_color_parse_ChannelInfo.CIInt8(i); else return thx_color_parse_ChannelInfo.CIInt(i);
-				} else if(thx_core_Floats.canParse(value)) return thx_color_parse_ChannelInfo.CIFloat(thx_core_Floats.parse(value)); else return null;
+				} else if(thx_Floats.canParse(value)) return thx_color_parse_ChannelInfo.CIFloat(thx_Floats.parse(value)); else return null;
 				break;
 			default:
 				return null;
@@ -19754,1248 +20997,22 @@ thx_color_parse_ChannelInfo.CIDegree = function(value) { var $x = ["CIDegree",2,
 thx_color_parse_ChannelInfo.CIInt8 = function(value) { var $x = ["CIInt8",3,value]; $x.__enum__ = thx_color_parse_ChannelInfo; $x.toString = $estr; return $x; };
 thx_color_parse_ChannelInfo.CIInt = function(value) { var $x = ["CIInt",4,value]; $x.__enum__ = thx_color_parse_ChannelInfo; $x.toString = $estr; return $x; };
 thx_color_parse_ChannelInfo.CIBool = function(value) { var $x = ["CIBool",5,value]; $x.__enum__ = thx_color_parse_ChannelInfo; $x.toString = $estr; return $x; };
-var thx_core_Arrays = function() { };
-thx_core_Arrays.__name__ = ["thx","core","Arrays"];
-thx_core_Arrays.after = function(array,element) {
-	return array.slice(HxOverrides.indexOf(array,element,0) + 1);
-};
-thx_core_Arrays.all = function(arr,predicate) {
-	var _g = 0;
-	while(_g < arr.length) {
-		var item = arr[_g];
-		++_g;
-		if(!predicate(item)) return false;
-	}
-	return true;
-};
-thx_core_Arrays.any = function(arr,predicate) {
-	var _g = 0;
-	while(_g < arr.length) {
-		var item = arr[_g];
-		++_g;
-		if(predicate(item)) return true;
-	}
-	return false;
-};
-thx_core_Arrays.at = function(arr,indexes) {
-	return indexes.map(function(i) {
-		return arr[i];
-	});
-};
-thx_core_Arrays.before = function(array,element) {
-	return array.slice(0,HxOverrides.indexOf(array,element,0));
-};
-thx_core_Arrays.compact = function(arr) {
-	return arr.filter(function(v) {
-		return null != v;
-	});
-};
-thx_core_Arrays.contains = function(array,element,eq) {
-	if(null == eq) return HxOverrides.indexOf(array,element,0) >= 0; else {
-		var _g1 = 0;
-		var _g = array.length;
-		while(_g1 < _g) {
-			var i = _g1++;
-			if(eq(array[i],element)) return true;
-		}
-		return false;
-	}
-};
-thx_core_Arrays.cross = function(a,b) {
-	var r = [];
-	var _g = 0;
-	while(_g < a.length) {
-		var va = a[_g];
-		++_g;
-		var _g1 = 0;
-		while(_g1 < b.length) {
-			var vb = b[_g1];
-			++_g1;
-			r.push([va,vb]);
-		}
-	}
-	return r;
-};
-thx_core_Arrays.crossMulti = function(array) {
-	var acopy = array.slice();
-	var result = acopy.shift().map(function(v) {
-		return [v];
-	});
-	while(acopy.length > 0) {
-		var array1 = acopy.shift();
-		var tresult = result;
-		result = [];
-		var _g = 0;
-		while(_g < array1.length) {
-			var v1 = array1[_g];
-			++_g;
-			var _g1 = 0;
-			while(_g1 < tresult.length) {
-				var ar = tresult[_g1];
-				++_g1;
-				var t = ar.slice();
-				t.push(v1);
-				result.push(t);
-			}
-		}
-	}
-	return result;
-};
-thx_core_Arrays.distinct = function(array,predicate) {
-	var result = [];
-	if(array.length <= 1) return array;
-	if(null == predicate) predicate = thx_core_Functions.equality;
-	var _g = 0;
-	while(_g < array.length) {
-		var v = [array[_g]];
-		++_g;
-		var keep = !thx_core_Arrays.any(result,(function(v) {
-			return function(r) {
-				return predicate(r,v[0]);
-			};
-		})(v));
-		if(keep) result.push(v[0]);
-	}
-	return result;
-};
-thx_core_Arrays.eachPair = function(array,callback) {
-	var _g1 = 0;
-	var _g = array.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		var _g3 = i;
-		var _g2 = array.length;
-		while(_g3 < _g2) {
-			var j = _g3++;
-			if(!callback(array[i],array[j])) return;
-		}
-	}
-};
-thx_core_Arrays.equals = function(a,b,equality) {
-	if(a == null || b == null || a.length != b.length) return false;
-	if(null == equality) equality = thx_core_Functions.equality;
-	var _g1 = 0;
-	var _g = a.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		if(!equality(a[i],b[i])) return false;
-	}
-	return true;
-};
-thx_core_Arrays.extract = function(a,predicate) {
-	var _g1 = 0;
-	var _g = a.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		if(predicate(a[i])) return a.splice(i,1)[0];
-	}
-	return null;
-};
-thx_core_Arrays.find = function(array,predicate) {
-	var _g = 0;
-	while(_g < array.length) {
-		var item = array[_g];
-		++_g;
-		if(predicate(item)) return item;
-	}
-	return null;
-};
-thx_core_Arrays.findLast = function(array,predicate) {
-	var len = array.length;
-	var j;
-	var _g = 0;
-	while(_g < len) {
-		var i = _g++;
-		j = len - i - 1;
-		if(predicate(array[j])) return array[j];
-	}
-	return null;
-};
-thx_core_Arrays.first = function(array) {
-	return array[0];
-};
-thx_core_Arrays.flatMap = function(array,callback) {
-	return thx_core_Arrays.flatten(array.map(callback));
-};
-thx_core_Arrays.flatten = function(array) {
-	return Array.prototype.concat.apply([],array);
-};
-thx_core_Arrays.from = function(array,element) {
-	return array.slice(HxOverrides.indexOf(array,element,0));
-};
-thx_core_Arrays.head = function(array) {
-	return array[0];
-};
-thx_core_Arrays.ifEmpty = function(value,alt) {
-	if(null != value && 0 != value.length) return value; else return alt;
-};
-thx_core_Arrays.initial = function(array) {
-	return array.slice(0,array.length - 1);
-};
-thx_core_Arrays.isEmpty = function(array) {
-	return array.length == 0;
-};
-thx_core_Arrays.last = function(array) {
-	return array[array.length - 1];
-};
-thx_core_Arrays.mapi = function(array,callback) {
-	var r = [];
-	var _g1 = 0;
-	var _g = array.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		r.push(callback(array[i],i));
-	}
-	return r;
-};
-thx_core_Arrays.mapRight = function(array,callback) {
-	var i = array.length;
-	var result = [];
-	while(--i >= 0) result.push(callback(array[i]));
-	return result;
-};
-thx_core_Arrays.order = function(array,sort) {
-	var n = array.slice();
-	n.sort(sort);
-	return n;
-};
-thx_core_Arrays.pull = function(array,toRemove,equality) {
-	var _g = 0;
-	while(_g < toRemove.length) {
-		var item = toRemove[_g];
-		++_g;
-		thx_core_Arrays.removeAll(array,item,equality);
-	}
-};
-thx_core_Arrays.pushIf = function(array,condition,value) {
-	if(condition) array.push(value);
-	return array;
-};
-thx_core_Arrays.reduce = function(array,callback,initial) {
-	return array.reduce(callback,initial);
-};
-thx_core_Arrays.resize = function(array,length,fill) {
-	while(array.length < length) array.push(fill);
-	array.splice(length,array.length - length);
-	return array;
-};
-thx_core_Arrays.reducei = function(array,callback,initial) {
-	return array.reduce(callback,initial);
-};
-thx_core_Arrays.reduceRight = function(array,callback,initial) {
-	var i = array.length;
-	while(--i >= 0) initial = callback(initial,array[i]);
-	return initial;
-};
-thx_core_Arrays.removeAll = function(array,element,equality) {
-	if(null == equality) equality = thx_core_Functions.equality;
-	var i = array.length;
-	while(--i >= 0) if(equality(array[i],element)) array.splice(i,1);
-};
-thx_core_Arrays.rest = function(array) {
-	return array.slice(1);
-};
-thx_core_Arrays.sample = function(array,n) {
-	n = thx_core_Ints.min(n,array.length);
-	var copy = array.slice();
-	var result = [];
-	var _g = 0;
-	while(_g < n) {
-		var i = _g++;
-		result.push(copy.splice(Std.random(copy.length),1)[0]);
-	}
-	return result;
-};
-thx_core_Arrays.sampleOne = function(array) {
-	return array[Std.random(array.length)];
-};
-thx_core_Arrays.shuffle = function(a) {
-	var t = thx_core_Ints.range(a.length);
-	var array = [];
-	while(t.length > 0) {
-		var pos = Std.random(t.length);
-		var index = t[pos];
-		t.splice(pos,1);
-		array.push(a[index]);
-	}
-	return array;
-};
-thx_core_Arrays.take = function(arr,n) {
-	return arr.slice(0,n);
-};
-thx_core_Arrays.takeLast = function(arr,n) {
-	return arr.slice(arr.length - n);
-};
-thx_core_Arrays.rotate = function(arr) {
-	var result = [];
-	var _g1 = 0;
-	var _g = arr[0].length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		var row = [];
-		result.push(row);
-		var _g3 = 0;
-		var _g2 = arr.length;
-		while(_g3 < _g2) {
-			var j = _g3++;
-			row.push(arr[j][i]);
-		}
-	}
-	return result;
-};
-thx_core_Arrays.zip = function(array1,array2) {
-	var length = thx_core_Ints.min(array1.length,array2.length);
-	var array = [];
-	var _g = 0;
-	while(_g < length) {
-		var i = _g++;
-		array.push({ _0 : array1[i], _1 : array2[i]});
-	}
-	return array;
-};
-thx_core_Arrays.zip3 = function(array1,array2,array3) {
-	var length = thx_core_ArrayInts.min([array1.length,array2.length,array3.length]);
-	var array = [];
-	var _g = 0;
-	while(_g < length) {
-		var i = _g++;
-		array.push({ _0 : array1[i], _1 : array2[i], _2 : array3[i]});
-	}
-	return array;
-};
-thx_core_Arrays.zip4 = function(array1,array2,array3,array4) {
-	var length = thx_core_ArrayInts.min([array1.length,array2.length,array3.length,array4.length]);
-	var array = [];
-	var _g = 0;
-	while(_g < length) {
-		var i = _g++;
-		array.push({ _0 : array1[i], _1 : array2[i], _2 : array3[i], _3 : array4[i]});
-	}
-	return array;
-};
-thx_core_Arrays.zip5 = function(array1,array2,array3,array4,array5) {
-	var length = thx_core_ArrayInts.min([array1.length,array2.length,array3.length,array4.length,array5.length]);
-	var array = [];
-	var _g = 0;
-	while(_g < length) {
-		var i = _g++;
-		array.push({ _0 : array1[i], _1 : array2[i], _2 : array3[i], _3 : array4[i], _4 : array5[i]});
-	}
-	return array;
-};
-thx_core_Arrays.unzip = function(array) {
-	var a1 = [];
-	var a2 = [];
-	array.map(function(t) {
-		a1.push(t._0);
-		a2.push(t._1);
-	});
-	return { _0 : a1, _1 : a2};
-};
-thx_core_Arrays.unzip3 = function(array) {
-	var a1 = [];
-	var a2 = [];
-	var a3 = [];
-	array.map(function(t) {
-		a1.push(t._0);
-		a2.push(t._1);
-		a3.push(t._2);
-	});
-	return { _0 : a1, _1 : a2, _2 : a3};
-};
-thx_core_Arrays.unzip4 = function(array) {
-	var a1 = [];
-	var a2 = [];
-	var a3 = [];
-	var a4 = [];
-	array.map(function(t) {
-		a1.push(t._0);
-		a2.push(t._1);
-		a3.push(t._2);
-		a4.push(t._3);
-	});
-	return { _0 : a1, _1 : a2, _2 : a3, _3 : a4};
-};
-thx_core_Arrays.unzip5 = function(array) {
-	var a1 = [];
-	var a2 = [];
-	var a3 = [];
-	var a4 = [];
-	var a5 = [];
-	array.map(function(t) {
-		a1.push(t._0);
-		a2.push(t._1);
-		a3.push(t._2);
-		a4.push(t._3);
-		a5.push(t._4);
-	});
-	return { _0 : a1, _1 : a2, _2 : a3, _3 : a4, _4 : a5};
-};
-var thx_core_ArrayFloats = function() { };
-thx_core_ArrayFloats.__name__ = ["thx","core","ArrayFloats"];
-thx_core_ArrayFloats.average = function(arr) {
-	return thx_core_ArrayFloats.sum(arr) / arr.length;
-};
-thx_core_ArrayFloats.compact = function(arr) {
-	return arr.filter(function(v) {
-		return null != v && isFinite(v);
-	});
-};
-thx_core_ArrayFloats.max = function(arr) {
-	if(arr.length == 0) return null; else return arr.reduce(function(max,v) {
-		if(v > max) return v; else return max;
-	},arr[0]);
-};
-thx_core_ArrayFloats.min = function(arr) {
-	if(arr.length == 0) return null; else return arr.reduce(function(min,v) {
-		if(v < min) return v; else return min;
-	},arr[0]);
-};
-thx_core_ArrayFloats.resize = function(array,length,fill) {
-	if(fill == null) fill = 0.0;
-	while(array.length < length) array.push(fill);
-	array.splice(length,array.length - length);
-	return array;
-};
-thx_core_ArrayFloats.sum = function(arr) {
-	return arr.reduce(function(tot,v) {
-		return tot + v;
-	},0.0);
-};
-var thx_core_ArrayInts = function() { };
-thx_core_ArrayInts.__name__ = ["thx","core","ArrayInts"];
-thx_core_ArrayInts.average = function(arr) {
-	return thx_core_ArrayInts.sum(arr) / arr.length;
-};
-thx_core_ArrayInts.max = function(arr) {
-	if(arr.length == 0) return null; else return arr.reduce(function(max,v) {
-		if(v > max) return v; else return max;
-	},arr[0]);
-};
-thx_core_ArrayInts.min = function(arr) {
-	if(arr.length == 0) return null; else return arr.reduce(function(min,v) {
-		if(v < min) return v; else return min;
-	},arr[0]);
-};
-thx_core_ArrayInts.resize = function(array,length,fill) {
-	if(fill == null) fill = 0;
-	while(array.length < length) array.push(fill);
-	array.splice(length,array.length - length);
-	return array;
-};
-thx_core_ArrayInts.sum = function(arr) {
-	return arr.reduce(function(tot,v) {
-		return tot + v;
-	},0);
-};
-var thx_core_ArrayStrings = function() { };
-thx_core_ArrayStrings.__name__ = ["thx","core","ArrayStrings"];
-thx_core_ArrayStrings.compact = function(arr) {
-	return arr.filter(function(v) {
-		return !thx_core_Strings.isEmpty(v);
-	});
-};
-thx_core_ArrayStrings.max = function(arr) {
-	if(arr.length == 0) return null; else return arr.reduce(function(max,v) {
-		if(v > max) return v; else return max;
-	},arr[0]);
-};
-thx_core_ArrayStrings.min = function(arr) {
-	if(arr.length == 0) return null; else return arr.reduce(function(min,v) {
-		if(v < min) return v; else return min;
-	},arr[0]);
-};
-var thx_core_Error = function(message,stack,pos) {
-	Error.call(this,message);
-	this.message = message;
-	if(null == stack) {
-		try {
-			stack = haxe_CallStack.exceptionStack();
-		} catch( e ) {
-			haxe_CallStack.lastException = e;
-			if (e instanceof js__$Boot_HaxeError) e = e.val;
-			stack = [];
-		}
-		if(stack.length == 0) try {
-			stack = haxe_CallStack.callStack();
-		} catch( e1 ) {
-			haxe_CallStack.lastException = e1;
-			if (e1 instanceof js__$Boot_HaxeError) e1 = e1.val;
-			stack = [];
-		}
-	}
-	this.stackItems = stack;
-	this.pos = pos;
-};
-thx_core_Error.__name__ = ["thx","core","Error"];
-thx_core_Error.fromDynamic = function(err,pos) {
-	if(js_Boot.__instanceof(err,thx_core_Error)) return err;
-	return new thx_core_error_ErrorWrapper("" + Std.string(err),err,null,pos);
-};
-thx_core_Error.__super__ = Error;
-thx_core_Error.prototype = $extend(Error.prototype,{
-	toString: function() {
-		return this.message + "\nfrom: " + this.pos.className + "." + this.pos.methodName + "() at " + this.pos.lineNumber + "\n\n" + haxe_CallStack.toString(this.stackItems);
-	}
-	,__class__: thx_core_Error
-});
-var thx_core_Floats = function() { };
-thx_core_Floats.__name__ = ["thx","core","Floats"];
-thx_core_Floats.angleDifference = function(a,b,turn) {
-	if(turn == null) turn = 360;
-	var r = (b - a) % turn;
-	if(r < 0) r += turn;
-	if(r > turn / 2) r -= turn;
-	return r;
-};
-thx_core_Floats.ceilTo = function(f,decimals) {
-	var p = Math.pow(10,decimals);
-	return Math.ceil(f * p) / p;
-};
-thx_core_Floats.canParse = function(s) {
-	return thx_core_Floats.pattern_parse.match(s);
-};
-thx_core_Floats.clamp = function(v,min,max) {
-	if(v < min) return min; else if(v > max) return max; else return v;
-};
-thx_core_Floats.clampSym = function(v,max) {
-	return thx_core_Floats.clamp(v,-max,max);
-};
-thx_core_Floats.compare = function(a,b) {
-	if(a < b) return -1; else if(a > b) return 1; else return 0;
-};
-thx_core_Floats.floorTo = function(f,decimals) {
-	var p = Math.pow(10,decimals);
-	return Math.floor(f * p) / p;
-};
-thx_core_Floats.interpolate = function(f,a,b) {
-	return (b - a) * f + a;
-};
-thx_core_Floats.interpolateAngle = function(f,a,b,turn) {
-	if(turn == null) turn = 360;
-	return thx_core_Floats.wrapCircular(thx_core_Floats.interpolate(f,a,a + thx_core_Floats.angleDifference(a,b,turn)),turn);
-};
-thx_core_Floats.interpolateAngleWidest = function(f,a,b,turn) {
-	if(turn == null) turn = 360;
-	return thx_core_Floats.wrapCircular(thx_core_Floats.interpolateAngle(f,a,b,turn) - turn / 2,turn);
-};
-thx_core_Floats.interpolateAngleCW = function(f,a,b,turn) {
-	if(turn == null) turn = 360;
-	a = thx_core_Floats.wrapCircular(a,turn);
-	b = thx_core_Floats.wrapCircular(b,turn);
-	if(b < a) b += turn;
-	return thx_core_Floats.wrapCircular(thx_core_Floats.interpolate(f,a,b),turn);
-};
-thx_core_Floats.interpolateAngleCCW = function(f,a,b,turn) {
-	if(turn == null) turn = 360;
-	a = thx_core_Floats.wrapCircular(a,turn);
-	b = thx_core_Floats.wrapCircular(b,turn);
-	if(b > a) b -= turn;
-	return thx_core_Floats.wrapCircular(thx_core_Floats.interpolate(f,a,b),turn);
-};
-thx_core_Floats.nearEquals = function(a,b) {
-	return Math.abs(a - b) <= 10e-10;
-};
-thx_core_Floats.nearZero = function(n) {
-	return Math.abs(n) <= 10e-10;
-};
-thx_core_Floats.normalize = function(v) {
-	if(v < 0) return 0; else if(v > 1) return 1; else return v;
-};
-thx_core_Floats.parse = function(s) {
-	if(s.substring(0,1) == "+") s = s.substring(1);
-	return parseFloat(s);
-};
-thx_core_Floats.root = function(base,index) {
-	return Math.pow(base,1 / index);
-};
-thx_core_Floats.roundTo = function(f,decimals) {
-	var p = Math.pow(10,decimals);
-	return Math.round(f * p) / p;
-};
-thx_core_Floats.sign = function(value) {
-	if(value < 0) return -1; else return 1;
-};
-thx_core_Floats.wrap = function(v,min,max) {
-	var range = max - min + 1;
-	if(v < min) v += range * ((min - v) / range + 1);
-	return min + (v - min) % range;
-};
-thx_core_Floats.wrapCircular = function(v,max) {
-	v = v % max;
-	if(v < 0) v += max;
-	return v;
-};
-var thx_core_Functions0 = function() { };
-thx_core_Functions0.__name__ = ["thx","core","Functions0"];
-thx_core_Functions0.after = function(callback,n) {
-	return function() {
-		if(--n == 0) callback();
-	};
-};
-thx_core_Functions0.join = function(fa,fb) {
-	return function() {
-		fa();
-		fb();
-	};
-};
-thx_core_Functions0.once = function(f) {
-	return function() {
-		var t = f;
-		f = thx_core_Functions.noop;
-		t();
-	};
-};
-thx_core_Functions0.negate = function(callback) {
-	return function() {
-		return !callback();
-	};
-};
-thx_core_Functions0.times = function(n,callback) {
-	return function() {
-		return thx_core_Ints.range(n).map(function(_) {
-			return callback();
-		});
-	};
-};
-thx_core_Functions0.timesi = function(n,callback) {
-	return function() {
-		return thx_core_Ints.range(n).map(function(i) {
-			return callback(i);
-		});
-	};
-};
-var thx_core_Functions1 = function() { };
-thx_core_Functions1.__name__ = ["thx","core","Functions1"];
-thx_core_Functions1.compose = function(fa,fb) {
-	return function(v) {
-		return fa(fb(v));
-	};
-};
-thx_core_Functions1.join = function(fa,fb) {
-	return function(v) {
-		fa(v);
-		fb(v);
-	};
-};
-thx_core_Functions1.memoize = function(callback,resolver) {
-	if(null == resolver) resolver = function(v) {
-		return "" + Std.string(v);
-	};
-	var map = new haxe_ds_StringMap();
-	return function(v1) {
-		var key = resolver(v1);
-		if(__map_reserved[key] != null?map.existsReserved(key):map.h.hasOwnProperty(key)) return __map_reserved[key] != null?map.getReserved(key):map.h[key];
-		var result = callback(v1);
-		if(__map_reserved[key] != null) map.setReserved(key,result); else map.h[key] = result;
-		return result;
-	};
-};
-thx_core_Functions1.negate = function(callback) {
-	return function(v) {
-		return !callback(v);
-	};
-};
-thx_core_Functions1.noop = function(_) {
-};
-thx_core_Functions1.times = function(n,callback) {
-	return function(value) {
-		return thx_core_Ints.range(n).map(function(_) {
-			return callback(value);
-		});
-	};
-};
-thx_core_Functions1.timesi = function(n,callback) {
-	return function(value) {
-		return thx_core_Ints.range(n).map(function(i) {
-			return callback(value,i);
-		});
-	};
-};
-thx_core_Functions1.swapArguments = function(callback) {
-	return function(a2,a1) {
-		return callback(a1,a2);
-	};
-};
-var thx_core_Functions2 = function() { };
-thx_core_Functions2.__name__ = ["thx","core","Functions2"];
-thx_core_Functions2.memoize = function(callback,resolver) {
-	if(null == resolver) resolver = function(v1,v2) {
-		return "" + Std.string(v1) + ":" + Std.string(v2);
-	};
-	var map = new haxe_ds_StringMap();
-	return function(v11,v21) {
-		var key = resolver(v11,v21);
-		if(__map_reserved[key] != null?map.existsReserved(key):map.h.hasOwnProperty(key)) return __map_reserved[key] != null?map.getReserved(key):map.h[key];
-		var result = callback(v11,v21);
-		if(__map_reserved[key] != null) map.setReserved(key,result); else map.h[key] = result;
-		return result;
-	};
-};
-thx_core_Functions2.negate = function(callback) {
-	return function(v1,v2) {
-		return !callback(v1,v2);
-	};
-};
-var thx_core_Functions3 = function() { };
-thx_core_Functions3.__name__ = ["thx","core","Functions3"];
-thx_core_Functions3.memoize = function(callback,resolver) {
-	if(null == resolver) resolver = function(v1,v2,v3) {
-		return "" + Std.string(v1) + ":" + Std.string(v2) + ":" + Std.string(v3);
-	};
-	var map = new haxe_ds_StringMap();
-	return function(v11,v21,v31) {
-		var key = resolver(v11,v21,v31);
-		if(__map_reserved[key] != null?map.existsReserved(key):map.h.hasOwnProperty(key)) return __map_reserved[key] != null?map.getReserved(key):map.h[key];
-		var result = callback(v11,v21,v31);
-		if(__map_reserved[key] != null) map.setReserved(key,result); else map.h[key] = result;
-		return result;
-	};
-};
-thx_core_Functions3.negate = function(callback) {
-	return function(v1,v2,v3) {
-		return !callback(v1,v2,v3);
-	};
-};
-var thx_core_Functions = function() { };
-thx_core_Functions.__name__ = ["thx","core","Functions"];
-thx_core_Functions.constant = function(v) {
-	return function() {
-		return v;
-	};
-};
-thx_core_Functions.equality = function(a,b) {
-	return a == b;
-};
-thx_core_Functions.identity = function(value) {
-	return value;
-};
-thx_core_Functions.noop = function() {
-};
-var thx_core_Ints = function() { };
-thx_core_Ints.__name__ = ["thx","core","Ints"];
-thx_core_Ints.abs = function(v) {
-	if(v < 0) return -v; else return v;
-};
-thx_core_Ints.canParse = function(s) {
-	return thx_core_Ints.pattern_parse.match(s);
-};
-thx_core_Ints.clamp = function(v,min,max) {
-	if(v < min) return min; else if(v > max) return max; else return v;
-};
-thx_core_Ints.clampSym = function(v,max) {
-	return thx_core_Ints.clamp(v,-max,max);
-};
-thx_core_Ints.compare = function(a,b) {
-	return a - b;
-};
-thx_core_Ints.interpolate = function(f,a,b) {
-	return Math.round(a + (b - a) * f);
-};
-thx_core_Ints.isEven = function(v) {
-	return v % 2 == 0;
-};
-thx_core_Ints.isOdd = function(v) {
-	return v % 2 != 0;
-};
-thx_core_Ints.max = function(a,b) {
-	if(a > b) return a; else return b;
-};
-thx_core_Ints.min = function(a,b) {
-	if(a < b) return a; else return b;
-};
-thx_core_Ints.parse = function(s,base) {
-	var v = parseInt(s,base);
-	if(isNaN(v)) return null; else return v;
-};
-thx_core_Ints.random = function(min,max) {
-	if(min == null) min = 0;
-	return Std.random(max + 1) + min;
-};
-thx_core_Ints.range = function(start,stop,step) {
-	if(step == null) step = 1;
-	if(null == stop) {
-		stop = start;
-		start = 0;
-	}
-	if((stop - start) / step == Infinity) throw new js__$Boot_HaxeError("infinite range");
-	var range = [];
-	var i = -1;
-	var j;
-	if(step < 0) while((j = start + step * ++i) > stop) range.push(j); else while((j = start + step * ++i) < stop) range.push(j);
-	return range;
-};
-thx_core_Ints.toString = function(value,base) {
-	return value.toString(base);
-};
-thx_core_Ints.toBool = function(v) {
-	return v != 0;
-};
-thx_core_Ints.sign = function(value) {
-	if(value < 0) return -1; else return 1;
-};
-thx_core_Ints.wrapCircular = function(v,max) {
-	v = v % max;
-	if(v < 0) v += max;
-	return v;
-};
-var thx_core_Nil = { __ename__ : true, __constructs__ : ["nil"] };
-thx_core_Nil.nil = ["nil",0];
-thx_core_Nil.nil.toString = $estr;
-thx_core_Nil.nil.__enum__ = thx_core_Nil;
-var thx_core_Nulls = function() { };
-thx_core_Nulls.__name__ = ["thx","core","Nulls"];
-var thx_core_Strings = function() { };
-thx_core_Strings.__name__ = ["thx","core","Strings"];
-thx_core_Strings.after = function(value,searchFor) {
-	var pos = value.indexOf(searchFor);
-	if(pos < 0) return ""; else return value.substring(pos + searchFor.length);
-};
-thx_core_Strings.capitalize = function(s) {
-	return s.substring(0,1).toUpperCase() + s.substring(1);
-};
-thx_core_Strings.capitalizeWords = function(value,whiteSpaceOnly) {
-	if(whiteSpaceOnly == null) whiteSpaceOnly = false;
-	if(whiteSpaceOnly) return thx_core_Strings.UCWORDSWS.map(value.substring(0,1).toUpperCase() + value.substring(1),thx_core_Strings.upperMatch); else return thx_core_Strings.UCWORDS.map(value.substring(0,1).toUpperCase() + value.substring(1),thx_core_Strings.upperMatch);
-};
-thx_core_Strings.collapse = function(value) {
-	return thx_core_Strings.WSG.replace(StringTools.trim(value)," ");
-};
-thx_core_Strings.compare = function(a,b) {
-	if(a < b) return -1; else if(a > b) return 1; else return 0;
-};
-thx_core_Strings.contains = function(s,test) {
-	return s.indexOf(test) >= 0;
-};
-thx_core_Strings.dasherize = function(s) {
-	return StringTools.replace(s,"_","-");
-};
-thx_core_Strings.ellipsis = function(s,maxlen,symbol) {
-	if(symbol == null) symbol = "...";
-	if(maxlen == null) maxlen = 20;
-	if(s.length > maxlen) return s.substring(0,symbol.length > maxlen - symbol.length?symbol.length:maxlen - symbol.length) + symbol; else return s;
-};
-thx_core_Strings.filter = function(s,predicate) {
-	return s.split("").filter(predicate).join("");
-};
-thx_core_Strings.filterCharcode = function(s,predicate) {
-	return thx_core_Strings.toCharcodeArray(s).filter(predicate).map(function(i) {
-		return String.fromCharCode(i);
-	}).join("");
-};
-thx_core_Strings.from = function(value,searchFor) {
-	var pos = value.indexOf(searchFor);
-	if(pos < 0) return ""; else return value.substring(pos);
-};
-thx_core_Strings.humanize = function(s) {
-	return StringTools.replace(thx_core_Strings.underscore(s),"_"," ");
-};
-thx_core_Strings.isAlphaNum = function(value) {
-	return thx_core_Strings.ALPHANUM.match(value);
-};
-thx_core_Strings.isLowerCase = function(value) {
-	return value.toLowerCase() == value;
-};
-thx_core_Strings.isUpperCase = function(value) {
-	return value.toUpperCase() == value;
-};
-thx_core_Strings.ifEmpty = function(value,alt) {
-	if(null != value && "" != value) return value; else return alt;
-};
-thx_core_Strings.isDigitsOnly = function(value) {
-	return thx_core_Strings.DIGITS.match(value);
-};
-thx_core_Strings.isEmpty = function(value) {
-	return value == null || value == "";
-};
-thx_core_Strings.random = function(value,length) {
-	if(length == null) length = 1;
-	var pos = Math.floor((value.length - length + 1) * Math.random());
-	return HxOverrides.substr(value,pos,length);
-};
-thx_core_Strings.iterator = function(s) {
-	var _this = s.split("");
-	return HxOverrides.iter(_this);
-};
-thx_core_Strings.map = function(value,callback) {
-	return value.split("").map(callback);
-};
-thx_core_Strings.remove = function(value,toremove) {
-	return StringTools.replace(value,toremove,"");
-};
-thx_core_Strings.removeAfter = function(value,toremove) {
-	if(StringTools.endsWith(value,toremove)) return value.substring(0,value.length - toremove.length); else return value;
-};
-thx_core_Strings.removeBefore = function(value,toremove) {
-	if(StringTools.startsWith(value,toremove)) return value.substring(toremove.length); else return value;
-};
-thx_core_Strings.repeat = function(s,times) {
-	return ((function($this) {
-		var $r;
-		var _g = [];
-		{
-			var _g1 = 0;
-			while(_g1 < times) {
-				var i = _g1++;
-				_g.push(s);
-			}
-		}
-		$r = _g;
-		return $r;
-	}(this))).join("");
-};
-thx_core_Strings.reverse = function(s) {
-	var arr = s.split("");
-	arr.reverse();
-	return arr.join("");
-};
-thx_core_Strings.stripTags = function(s) {
-	return thx_core_Strings.STRIPTAGS.replace(s,"");
-};
-thx_core_Strings.surround = function(s,left,right) {
-	return "" + left + s + (null == right?left:right);
-};
-thx_core_Strings.toArray = function(s) {
-	return s.split("");
-};
-thx_core_Strings.toCharcodeArray = function(s) {
-	return thx_core_Strings.map(s,function(s1) {
-		return HxOverrides.cca(s1,0);
-	});
-};
-thx_core_Strings.toChunks = function(s,len) {
-	var chunks = [];
-	while(s.length > 0) {
-		chunks.push(s.substring(0,len));
-		s = s.substring(len);
-	}
-	return chunks;
-};
-thx_core_Strings.trimChars = function(value,charlist) {
-	return thx_core_Strings.trimCharsRight(thx_core_Strings.trimCharsLeft(value,charlist),charlist);
-};
-thx_core_Strings.trimCharsLeft = function(value,charlist) {
-	var pos = 0;
-	var _g1 = 0;
-	var _g = value.length;
-	while(_g1 < _g) {
-		var i = _g1++;
-		if(thx_core_Strings.contains(charlist,value.charAt(i))) pos++; else break;
-	}
-	return value.substring(pos);
-};
-thx_core_Strings.trimCharsRight = function(value,charlist) {
-	var len = value.length;
-	var pos = len;
-	var i;
-	var _g = 0;
-	while(_g < len) {
-		var j = _g++;
-		i = len - j - 1;
-		if(thx_core_Strings.contains(charlist,value.charAt(i))) pos = i; else break;
-	}
-	return value.substring(0,pos);
-};
-thx_core_Strings.underscore = function(s) {
-	s = new EReg("::","g").replace(s,"/");
-	s = new EReg("([A-Z]+)([A-Z][a-z])","g").replace(s,"$1_$2");
-	s = new EReg("([a-z\\d])([A-Z])","g").replace(s,"$1_$2");
-	s = new EReg("-","g").replace(s,"_");
-	return s.toLowerCase();
-};
-thx_core_Strings.upTo = function(value,searchFor) {
-	var pos = value.indexOf(searchFor);
-	if(pos < 0) return value; else return value.substring(0,pos);
-};
-thx_core_Strings.wrapColumns = function(s,columns,indent,newline) {
-	if(newline == null) newline = "\n";
-	if(indent == null) indent = "";
-	if(columns == null) columns = 78;
-	return thx_core_Strings.SPLIT_LINES.split(s).map(function(part) {
-		return thx_core_Strings.wrapLine(StringTools.trim(thx_core_Strings.WSG.replace(part," ")),columns,indent,newline);
-	}).join(newline);
-};
-thx_core_Strings.upperMatch = function(re) {
-	return re.matched(0).toUpperCase();
-};
-thx_core_Strings.wrapLine = function(s,columns,indent,newline) {
-	var parts = [];
-	var pos = 0;
-	var len = s.length;
-	var ilen = indent.length;
-	columns -= ilen;
-	while(true) {
-		if(pos + columns >= len - ilen) {
-			parts.push(s.substring(pos));
-			break;
-		}
-		var i = 0;
-		while(!StringTools.isSpace(s,pos + columns - i) && i < columns) i++;
-		if(i == columns) {
-			i = 0;
-			while(!StringTools.isSpace(s,pos + columns + i) && pos + columns + i < len) i++;
-			parts.push(s.substring(pos,pos + columns + i));
-			pos += columns + i + 1;
-		} else {
-			parts.push(s.substring(pos,pos + columns - i));
-			pos += columns - i + 1;
-		}
-	}
-	return indent + parts.join(newline + indent);
-};
-var thx_core_Timer = function() { };
-thx_core_Timer.__name__ = ["thx","core","Timer"];
-thx_core_Timer.debounce = function(callback,delayms,leading) {
-	if(leading == null) leading = false;
-	var cancel = thx_core_Functions.noop;
-	var poll = function() {
-		cancel();
-		cancel = thx_core_Timer.delay(callback,delayms);
-	};
-	return function() {
-		if(leading) {
-			leading = false;
-			callback();
-		}
-		poll();
-	};
-};
-thx_core_Timer.throttle = function(callback,delayms,leading) {
-	if(leading == null) leading = false;
-	var waiting = false;
-	var poll = function() {
-		waiting = true;
-		thx_core_Timer.delay(callback,delayms);
-	};
-	return function() {
-		if(leading) {
-			leading = false;
-			callback();
-			return;
-		}
-		if(waiting) return;
-		poll();
-	};
-};
-thx_core_Timer.repeat = function(callback,delayms) {
-	return (function(f,id) {
-		return function() {
-			f(id);
-		};
-	})(thx_core_Timer.clear,setInterval(callback,delayms));
-};
-thx_core_Timer.delay = function(callback,delayms) {
-	return (function(f,id) {
-		return function() {
-			f(id);
-		};
-	})(thx_core_Timer.clear,setTimeout(callback,delayms));
-};
-thx_core_Timer.frame = function(callback) {
-	var cancelled = false;
-	var f = thx_core_Functions.noop;
-	var current = performance.now();
-	var next;
-	f = function() {
-		if(cancelled) return;
-		next = performance.now();
-		callback(next - current);
-		current = next;
-		requestAnimationFrame(f);
-	};
-	requestAnimationFrame(f);
-	return function() {
-		cancelled = true;
-	};
-};
-thx_core_Timer.nextFrame = function(callback) {
-	var id = requestAnimationFrame(callback);
-	return function() {
-		cancelAnimationFrame(id);
-	};
-};
-thx_core_Timer.immediate = function(callback) {
-	return (function(f,id) {
-		return function() {
-			f(id);
-		};
-	})(thx_core_Timer.clear,setImmediate(callback));
-};
-thx_core_Timer.clear = function(id) {
-	clearTimeout(id);
-	return;
-};
-thx_core_Timer.time = function() {
-	return performance.now();
-};
-var thx_core__$Tuple_Tuple0_$Impl_$ = {};
-thx_core__$Tuple_Tuple0_$Impl_$.__name__ = ["thx","core","_Tuple","Tuple0_Impl_"];
-thx_core__$Tuple_Tuple0_$Impl_$._new = function() {
-	return thx_core_Nil.nil;
-};
-thx_core__$Tuple_Tuple0_$Impl_$["with"] = function(this1,v) {
-	return v;
-};
-thx_core__$Tuple_Tuple0_$Impl_$.toString = function(this1) {
-	return "Tuple0()";
-};
-thx_core__$Tuple_Tuple0_$Impl_$.toNil = function(this1) {
-	return this1;
-};
-thx_core__$Tuple_Tuple0_$Impl_$.nilToTuple = function(v) {
-	return thx_core_Nil.nil;
-};
-var thx_core__$Tuple_Tuple1_$Impl_$ = {};
-thx_core__$Tuple_Tuple1_$Impl_$.__name__ = ["thx","core","_Tuple","Tuple1_Impl_"];
-thx_core__$Tuple_Tuple1_$Impl_$._new = function(_0) {
-	return _0;
-};
-thx_core__$Tuple_Tuple1_$Impl_$.get__0 = function(this1) {
-	return this1;
-};
-thx_core__$Tuple_Tuple1_$Impl_$["with"] = function(this1,v) {
-	return { _0 : this1, _1 : v};
-};
-thx_core__$Tuple_Tuple1_$Impl_$.toString = function(this1) {
-	return "Tuple1(" + Std.string(this1) + ")";
-};
-thx_core__$Tuple_Tuple1_$Impl_$.arrayToTuple = function(v) {
-	return v[0];
-};
-var thx_core__$Tuple_Tuple2_$Impl_$ = {};
-thx_core__$Tuple_Tuple2_$Impl_$.__name__ = ["thx","core","_Tuple","Tuple2_Impl_"];
-thx_core__$Tuple_Tuple2_$Impl_$._new = function(_0,_1) {
-	return { _0 : _0, _1 : _1};
-};
-thx_core__$Tuple_Tuple2_$Impl_$.get_left = function(this1) {
-	return this1._0;
-};
-thx_core__$Tuple_Tuple2_$Impl_$.get_right = function(this1) {
-	return this1._1;
-};
-thx_core__$Tuple_Tuple2_$Impl_$.flip = function(this1) {
-	return { _0 : this1._1, _1 : this1._0};
-};
-thx_core__$Tuple_Tuple2_$Impl_$.dropLeft = function(this1) {
-	return this1._1;
-};
-thx_core__$Tuple_Tuple2_$Impl_$.dropRight = function(this1) {
-	return this1._0;
-};
-thx_core__$Tuple_Tuple2_$Impl_$["with"] = function(this1,v) {
-	return { _0 : this1._0, _1 : this1._1, _2 : v};
-};
-thx_core__$Tuple_Tuple2_$Impl_$.toString = function(this1) {
-	return "Tuple2(" + Std.string(this1._0) + "," + Std.string(this1._1) + ")";
-};
-thx_core__$Tuple_Tuple2_$Impl_$.arrayToTuple2 = function(v) {
-	return { _0 : v[0], _1 : v[1]};
-};
-var thx_core__$Tuple_Tuple3_$Impl_$ = {};
-thx_core__$Tuple_Tuple3_$Impl_$.__name__ = ["thx","core","_Tuple","Tuple3_Impl_"];
-thx_core__$Tuple_Tuple3_$Impl_$._new = function(_0,_1,_2) {
-	return { _0 : _0, _1 : _1, _2 : _2};
-};
-thx_core__$Tuple_Tuple3_$Impl_$.flip = function(this1) {
-	return { _0 : this1._2, _1 : this1._1, _2 : this1._0};
-};
-thx_core__$Tuple_Tuple3_$Impl_$.dropLeft = function(this1) {
-	return { _0 : this1._1, _1 : this1._2};
-};
-thx_core__$Tuple_Tuple3_$Impl_$.dropRight = function(this1) {
-	return { _0 : this1._0, _1 : this1._1};
-};
-thx_core__$Tuple_Tuple3_$Impl_$["with"] = function(this1,v) {
-	return { _0 : this1._0, _1 : this1._1, _2 : this1._2, _3 : v};
-};
-thx_core__$Tuple_Tuple3_$Impl_$.toString = function(this1) {
-	return "Tuple3(" + Std.string(this1._0) + "," + Std.string(this1._1) + "," + Std.string(this1._2) + ")";
-};
-thx_core__$Tuple_Tuple3_$Impl_$.arrayToTuple3 = function(v) {
-	return { _0 : v[0], _1 : v[1], _2 : v[2]};
-};
-var thx_core__$Tuple_Tuple4_$Impl_$ = {};
-thx_core__$Tuple_Tuple4_$Impl_$.__name__ = ["thx","core","_Tuple","Tuple4_Impl_"];
-thx_core__$Tuple_Tuple4_$Impl_$._new = function(_0,_1,_2,_3) {
-	return { _0 : _0, _1 : _1, _2 : _2, _3 : _3};
-};
-thx_core__$Tuple_Tuple4_$Impl_$.flip = function(this1) {
-	return { _0 : this1._3, _1 : this1._2, _2 : this1._1, _3 : this1._0};
-};
-thx_core__$Tuple_Tuple4_$Impl_$.dropLeft = function(this1) {
-	return { _0 : this1._1, _1 : this1._2, _2 : this1._3};
-};
-thx_core__$Tuple_Tuple4_$Impl_$.dropRight = function(this1) {
-	return { _0 : this1._0, _1 : this1._1, _2 : this1._2};
-};
-thx_core__$Tuple_Tuple4_$Impl_$["with"] = function(this1,v) {
-	return { _0 : this1._0, _1 : this1._1, _2 : this1._2, _3 : this1._3, _4 : v};
-};
-thx_core__$Tuple_Tuple4_$Impl_$.toString = function(this1) {
-	return "Tuple4(" + Std.string(this1._0) + "," + Std.string(this1._1) + "," + Std.string(this1._2) + "," + Std.string(this1._3) + ")";
-};
-thx_core__$Tuple_Tuple4_$Impl_$.arrayToTuple4 = function(v) {
-	return { _0 : v[0], _1 : v[1], _2 : v[2], _3 : v[3]};
-};
-var thx_core__$Tuple_Tuple5_$Impl_$ = {};
-thx_core__$Tuple_Tuple5_$Impl_$.__name__ = ["thx","core","_Tuple","Tuple5_Impl_"];
-thx_core__$Tuple_Tuple5_$Impl_$._new = function(_0,_1,_2,_3,_4) {
-	return { _0 : _0, _1 : _1, _2 : _2, _3 : _3, _4 : _4};
-};
-thx_core__$Tuple_Tuple5_$Impl_$.flip = function(this1) {
-	return { _0 : this1._4, _1 : this1._3, _2 : this1._2, _3 : this1._1, _4 : this1._0};
-};
-thx_core__$Tuple_Tuple5_$Impl_$.dropLeft = function(this1) {
-	return { _0 : this1._1, _1 : this1._2, _2 : this1._3, _3 : this1._4};
-};
-thx_core__$Tuple_Tuple5_$Impl_$.dropRight = function(this1) {
-	return { _0 : this1._0, _1 : this1._1, _2 : this1._2, _3 : this1._3};
-};
-thx_core__$Tuple_Tuple5_$Impl_$["with"] = function(this1,v) {
-	return { _0 : this1._0, _1 : this1._1, _2 : this1._2, _3 : this1._3, _4 : this1._4, _5 : v};
-};
-thx_core__$Tuple_Tuple5_$Impl_$.toString = function(this1) {
-	return "Tuple5(" + Std.string(this1._0) + "," + Std.string(this1._1) + "," + Std.string(this1._2) + "," + Std.string(this1._3) + "," + Std.string(this1._4) + ")";
-};
-thx_core__$Tuple_Tuple5_$Impl_$.arrayToTuple5 = function(v) {
-	return { _0 : v[0], _1 : v[1], _2 : v[2], _3 : v[3], _4 : v[4]};
-};
-var thx_core__$Tuple_Tuple6_$Impl_$ = {};
-thx_core__$Tuple_Tuple6_$Impl_$.__name__ = ["thx","core","_Tuple","Tuple6_Impl_"];
-thx_core__$Tuple_Tuple6_$Impl_$._new = function(_0,_1,_2,_3,_4,_5) {
-	return { _0 : _0, _1 : _1, _2 : _2, _3 : _3, _4 : _4, _5 : _5};
-};
-thx_core__$Tuple_Tuple6_$Impl_$.flip = function(this1) {
-	return { _0 : this1._5, _1 : this1._4, _2 : this1._3, _3 : this1._2, _4 : this1._1, _5 : this1._0};
-};
-thx_core__$Tuple_Tuple6_$Impl_$.dropLeft = function(this1) {
-	return { _0 : this1._1, _1 : this1._2, _2 : this1._3, _3 : this1._4, _4 : this1._5};
-};
-thx_core__$Tuple_Tuple6_$Impl_$.dropRight = function(this1) {
-	return { _0 : this1._0, _1 : this1._1, _2 : this1._2, _3 : this1._3, _4 : this1._4};
-};
-thx_core__$Tuple_Tuple6_$Impl_$.toString = function(this1) {
-	return "Tuple6(" + Std.string(this1._0) + "," + Std.string(this1._1) + "," + Std.string(this1._2) + "," + Std.string(this1._3) + "," + Std.string(this1._4) + "," + Std.string(this1._5) + ")";
-};
-thx_core__$Tuple_Tuple6_$Impl_$.arrayToTuple6 = function(v) {
-	return { _0 : v[0], _1 : v[1], _2 : v[2], _3 : v[3], _4 : v[4], _5 : v[5]};
-};
-var thx_core_error_ErrorWrapper = function(message,innerError,stack,pos) {
-	thx_core_Error.call(this,message,stack,pos);
+var thx_error_ErrorWrapper = function(message,innerError,stack,pos) {
+	thx_Error.call(this,message,stack,pos);
 	this.innerError = innerError;
 };
-thx_core_error_ErrorWrapper.__name__ = ["thx","core","error","ErrorWrapper"];
-thx_core_error_ErrorWrapper.__super__ = thx_core_Error;
-thx_core_error_ErrorWrapper.prototype = $extend(thx_core_Error.prototype,{
-	__class__: thx_core_error_ErrorWrapper
+thx_error_ErrorWrapper.__name__ = ["thx","error","ErrorWrapper"];
+thx_error_ErrorWrapper.__super__ = thx_Error;
+thx_error_ErrorWrapper.prototype = $extend(thx_Error.prototype,{
+	__class__: thx_error_ErrorWrapper
 });
-var thx_core_error_NullArgument = function(message,posInfo) {
-	thx_core_Error.call(this,message,null,posInfo);
+var thx_error_NullArgument = function(message,posInfo) {
+	thx_Error.call(this,message,null,posInfo);
 };
-thx_core_error_NullArgument.__name__ = ["thx","core","error","NullArgument"];
-thx_core_error_NullArgument.__super__ = thx_core_Error;
-thx_core_error_NullArgument.prototype = $extend(thx_core_Error.prototype,{
-	__class__: thx_core_error_NullArgument
+thx_error_NullArgument.__name__ = ["thx","error","NullArgument"];
+thx_error_NullArgument.__super__ = thx_Error;
+thx_error_NullArgument.prototype = $extend(thx_Error.prototype,{
+	__class__: thx_error_NullArgument
 });
 var zpp_$nape_ZPP_$Const = function() { };
 zpp_$nape_ZPP_$Const.__name__ = ["zpp_nape","ZPP_Const"];
@@ -61355,23 +61372,23 @@ nape_Config.contactContinuousStaticBiasCoef = 0.5;
 nape_Config.constraintLinearSlop = 0.1;
 nape_Config.constraintAngularSlop = 1e-3;
 nape_Config.illConditionedThreshold = 2e+8;
+thx_Floats.TOLERANCE = 10e-5;
+thx_Floats.EPSILON = 10e-10;
+thx_Floats.pattern_parse = new EReg("^(\\+|-)?\\d+(\\.\\d+)?(e-?\\d+)?$","");
+thx_Ints.pattern_parse = new EReg("^[+-]?(\\d+|0x[0-9A-F]+)$","i");
+thx_Ints.BASE = "0123456789abcdefghijklmnopqrstuvwxyz";
+thx_Strings.UCWORDS = new EReg("[^a-zA-Z]([a-z])","g");
+thx_Strings.UCWORDSWS = new EReg("\\s[a-z]","g");
+thx_Strings.ALPHANUM = new EReg("^[a-z0-9]+$","i");
+thx_Strings.DIGITS = new EReg("^[0-9]+$","");
+thx_Strings.STRIPTAGS = new EReg("</?[a-z]+[^>]*?/?>","gi");
+thx_Strings.WSG = new EReg("\\s+","g");
+thx_Strings.SPLIT_LINES = new EReg("\r\n|\n\r|\n|\r","g");
+thx_Timer.FRAME_RATE = Math.round(16.6666666666666679);
 thx_color__$Grey_Grey_$Impl_$.black = 0;
 thx_color__$Grey_Grey_$Impl_$.white = 1;
 thx_color_parse_ColorParser.parser = new thx_color_parse_ColorParser();
 thx_color_parse_ColorParser.isPureHex = new EReg("^([0-9a-f]{2}){3,4}$","i");
-thx_core_Floats.TOLERANCE = 10e-5;
-thx_core_Floats.EPSILON = 10e-10;
-thx_core_Floats.pattern_parse = new EReg("^(\\+|-)?\\d+(\\.\\d+)?(e-?\\d+)?$","");
-thx_core_Ints.pattern_parse = new EReg("^[+-]?(\\d+|0x[0-9A-F]+)$","i");
-thx_core_Ints.BASE = "0123456789abcdefghijklmnopqrstuvwxyz";
-thx_core_Strings.UCWORDS = new EReg("[^a-zA-Z]([a-z])","g");
-thx_core_Strings.UCWORDSWS = new EReg("\\s[a-z]","g");
-thx_core_Strings.ALPHANUM = new EReg("^[a-z0-9]+$","i");
-thx_core_Strings.DIGITS = new EReg("^[0-9]+$","");
-thx_core_Strings.STRIPTAGS = new EReg("</?[a-z]+[^>]*?/?>","gi");
-thx_core_Strings.WSG = new EReg("\\s+","g");
-thx_core_Strings.SPLIT_LINES = new EReg("\r\n|\n\r|\n|\r","g");
-thx_core_Timer.FRAME_RATE = Math.round(16.6666666666666679);
 zpp_$nape_ZPP_$Const.FMAX = 1e100;
 zpp_$nape_ZPP_$ID._Constraint = 0;
 zpp_$nape_ZPP_$ID._Interactor = 0;

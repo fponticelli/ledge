@@ -6,7 +6,7 @@ import edge.ISystem;
 import pixi.core.display.Container;
 import pixi.core.graphics.Graphics;
 import nape.shape.Shape;
-using thx.core.Arrays;
+using thx.Arrays;
 import thx.color.HSL;
 
 class PhysicsDebugRenderer implements ISystem {
