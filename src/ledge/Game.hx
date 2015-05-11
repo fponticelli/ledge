@@ -19,6 +19,8 @@ class Game {
   var frame : Phase;
   var physics : Phase;
   var render : Phase;
+  var ui : Phase;
+  var resolution : Phase;
   var renderer : Renderer;
   public function new(renderer : SystemRenderer) {
     world   = new World();
@@ -81,8 +83,17 @@ class Game {
     createButton(
       720, 30,
       "click me",
-      function() trace("CLICK")
+      startResolution
     );
+  }
+
+  public function startResolution() {
+    resolution.enabled = !resolution.enabled;
+    ui.enabled = !ui.enabled;
+  }
+
+  public function stopResolution() {
+    resolution.clearSystems();
   }
 
   public function addSystems() {
@@ -93,12 +104,17 @@ class Game {
     mouse.add(new MousePathSystem(stage));
 
     // physics
-    var realtime = physics.createPhase();
-    realtime.add(new PhysicsSpace());
+    resolution = physics.createPhase();
+    resolution.enabled = false;
+    resolution.add(new PhysicsSpace());
+    resolution.add(new WaypointApplier());
 
     // rendering systems
-    render.add(new RenderWaypoints(stage));
-    render.add(new RenderSelected(stage));
+    ui = render.createPhase();
+    ui.enabled = true;
+    ui.add(new RenderWaypoints(stage));
+    ui.add(new RenderSelected(stage));
+
     render.add(new PhysicsDisplayUpdate());
     render.add(new PhysicsDebugRenderer(stage));
     render.add(renderer);
