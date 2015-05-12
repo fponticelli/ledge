@@ -11,6 +11,7 @@ class Structure {
   public function new(shapes : Array<Shape>, material : Material, ?type : BodyType) {
     this.shapes = shapes;
     this.body = new Body(type.or(BodyType.DYNAMIC));
+
     shapes.map(function(shape) {
       //body.shapes.add(shape);
       shape.body = body;

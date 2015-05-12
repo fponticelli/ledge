@@ -1145,19 +1145,28 @@ ledge_Game.prototype = {
 		this.createWarrior(100,100);
 		this.createWarrior(500,200);
 		this.createWarrior(300,500);
-		this.createButton(720,30,"click me",function() {
-			console.log("CLICK");
-		});
+		this.createButton(720,30,"click me",$bind(this,this.startResolution));
+	}
+	,startResolution: function() {
+		this.resolution.enabled = !this.resolution.enabled;
+		this.ui.enabled = !this.ui.enabled;
+	}
+	,stopResolution: function() {
+		this.resolution.clearSystems();
 	}
 	,addSystems: function() {
 		var mouse = this.frame.createPhase();
 		mouse.add(new ledge_systems_MouseButtonSystem(this.stage));
 		mouse.add(new ledge_systems_MouseSelectSystem(this.stage,ledge_components_Selected.instance));
 		mouse.add(new ledge_systems_MousePathSystem(this.stage));
-		var realtime = this.physics.createPhase();
-		realtime.add(new ledge_systems_PhysicsSpace());
-		this.render.add(new ledge_systems_RenderWaypoints(this.stage));
-		this.render.add(new ledge_systems_RenderSelected(this.stage));
+		this.resolution = this.physics.createPhase();
+		this.resolution.enabled = false;
+		this.resolution.add(new ledge_systems_PhysicsSpace());
+		this.resolution.add(new ledge_systems_WaypointApplier());
+		this.ui = this.render.createPhase();
+		this.ui.enabled = true;
+		this.ui.add(new ledge_systems_RenderWaypoints(this.stage));
+		this.ui.add(new ledge_systems_RenderSelected(this.stage));
 		this.render.add(new ledge_systems_PhysicsDisplayUpdate());
 		this.render.add(new ledge_systems_PhysicsDebugRenderer(this.stage));
 		this.render.add(this.renderer);
@@ -1934,6 +1943,90 @@ ledge_systems_RenderWaypoints_$SystemProcess.prototype = {
 		var added = count == 0 && this.updateItems.tryAdd(entity,o);
 	}
 	,__class__: ledge_systems_RenderWaypoints_$SystemProcess
+};
+var ledge_systems_WaypointApplier = function() {
+	this.elapsedTime = 0;
+	this.map = new haxe_ds_ObjectMap();
+	this.__process__ = new ledge_systems_WaypointApplier_$SystemProcess(this);
+};
+ledge_systems_WaypointApplier.__name__ = ["ledge","systems","WaypointApplier"];
+ledge_systems_WaypointApplier.__interfaces__ = [edge_ISystem];
+ledge_systems_WaypointApplier.prototype = {
+	updateAdded: function(entity,data) {
+		this.map.set(entity,this.elapsedTime);
+	}
+	,updateRemoved: function(entity,data) {
+		this.map.remove(entity);
+	}
+	,before: function() {
+		this.elapsedTime += this.timeDelta;
+	}
+	,update: function(structure,waypoints) {
+		var currTime = this.map.h[this.entity.__id__];
+		if(currTime > this.elapsedTime) return true;
+		var next = waypoints.path.shift();
+		if(next == null) return true;
+		var vec = new nape_geom_Vec2(next.x,next.y);
+		var dir = vec.sub(structure.body.get_position());
+		structure.body.get_velocity().set(dir);
+		this.map.set(this.entity,currTime + 1000);
+		return true;
+	}
+	,toString: function() {
+		return "ledge.systems.WaypointApplier";
+	}
+	,__class__: ledge_systems_WaypointApplier
+};
+var ledge_systems_WaypointApplier_$SystemProcess = function(system) {
+	this.system = system;
+	this.updateItems = new edge_View();
+};
+ledge_systems_WaypointApplier_$SystemProcess.__name__ = ["ledge","systems","WaypointApplier_SystemProcess"];
+ledge_systems_WaypointApplier_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
+ledge_systems_WaypointApplier_$SystemProcess.prototype = {
+	removeEntity: function(entity) {
+		var removed = this.updateItems.tryRemove(entity);
+		if(removed != null) this.system.updateRemoved(entity,removed);
+	}
+	,addEntity: function(entity) {
+		this.updateMatchRequirements(entity);
+	}
+	,update: function(engine,delta) {
+		this.system.timeDelta = delta;
+		var result = true;
+		if(this.updateItems.count > 0) this.system.before();
+		var data;
+		var $it0 = this.updateItems.iterator();
+		while( $it0.hasNext() ) {
+			var item = $it0.next();
+			this.system.entity = item.entity;
+			data = item.data;
+			result = this.system.update(data.structure,data.waypoints);
+			if(!result) break;
+		}
+		return result;
+	}
+	,updateMatchRequirements: function(entity) {
+		var removed = this.updateItems.tryRemove(entity);
+		var count = 2;
+		var o = { structure : null, waypoints : null};
+		var $it0 = entity.map.iterator();
+		while( $it0.hasNext() ) {
+			var component = $it0.next();
+			if(js_Boot.__instanceof(component,ledge_components_Structure)) {
+				o.structure = component;
+				if(--count == 0) break; else continue;
+			}
+			if(js_Boot.__instanceof(component,ledge_components_Waypoints)) {
+				o.waypoints = component;
+				if(--count == 0) break; else continue;
+			}
+		}
+		var added = count == 0 && this.updateItems.tryAdd(entity,o);
+		if(null != removed && !added) this.system.updateRemoved(entity,removed);
+		if(added && null == removed) this.system.updateAdded(entity,o);
+	}
+	,__class__: ledge_systems_WaypointApplier_$SystemProcess
 };
 var nape_Config = function() {
 };
@@ -17736,6 +17829,14 @@ thx_Arrays.contains = function(array,element,eq) {
 		return false;
 	}
 };
+thx_Arrays.containsAny = function(array,elements,eq) {
+	var $it0 = $iterator(elements)();
+	while( $it0.hasNext() ) {
+		var el = $it0.next();
+		if(thx_Arrays.contains(array,el,eq)) return true;
+	}
+	return false;
+};
 thx_Arrays.cross = function(a,b) {
 	var r = [];
 	var _g = 0;
@@ -17965,6 +18066,21 @@ thx_Arrays.shuffle = function(a) {
 		array.push(a[index]);
 	}
 	return array;
+};
+thx_Arrays.split = function(array,parts) {
+	var len = Math.ceil(array.length / parts);
+	return thx_Arrays.splitBy(array,len);
+};
+thx_Arrays.splitBy = function(array,len) {
+	var res = [];
+	len = thx_Ints.min(len,array.length);
+	var _g1 = 0;
+	var _g = Math.ceil(array.length / len);
+	while(_g1 < _g) {
+		var p = _g1++;
+		res.push(array.slice(p * len,(p + 1) * len));
+	}
+	return res;
 };
 thx_Arrays.take = function(arr,n) {
 	return arr.slice(0,n);
@@ -18512,6 +18628,13 @@ thx_Strings.compare = function(a,b) {
 };
 thx_Strings.contains = function(s,test) {
 	return s.indexOf(test) >= 0;
+};
+thx_Strings.containsAny = function(s,tests) {
+	return thx_Arrays.any(tests,(function(f,s1) {
+		return function(a1) {
+			return f(s1,a1);
+		};
+	})(thx_Strings.contains,s));
 };
 thx_Strings.dasherize = function(s) {
 	return StringTools.replace(s,"_","-");
