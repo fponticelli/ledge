@@ -218,6 +218,9 @@ StringTools.hex = function(n,digits) {
 };
 var Type = function() { };
 Type.__name__ = ["Type"];
+Type.getSuperClass = function(c) {
+	return c.__super__;
+};
 Type.getClassName = function(c) {
 	var a = c.__name__;
 	if(a == null) return null;
@@ -365,19 +368,26 @@ edge_Entity.prototype = {
 		return this.map.iterator();
 	}
 	,_add: function(component) {
-		var type = Type.getClassName(component == null?null:js_Boot.getClass(component));
+		var type = this.key(component);
 		if(this.map.exists(type)) this.remove(this.map.get(type));
 		this.map.set(type,component);
 	}
 	,_remove: function(component) {
-		var type = Type.getClassName(component == null?null:js_Boot.getClass(component));
+		var type = this.key(component);
 		this._removeTypeName(type);
 	}
 	,_removeTypeName: function(type) {
 		this.map.remove(type);
 	}
 	,key: function(component) {
-		return Type.getClassName(component == null?null:js_Boot.getClass(component));
+		var t;
+		if(component == null) t = null; else t = js_Boot.getClass(component);
+		var s = Type.getSuperClass(t);
+		while(s != null && s != edge_IComponent) {
+			t = s;
+			s = Type.getSuperClass(t);
+		}
+		return Type.getClassName(t);
 	}
 	,__class__: edge_Entity
 };
@@ -662,8 +672,8 @@ edge_pixi_cosystems_MouseSystem.prototype = {
 	}
 	,__class__: edge_pixi_cosystems_MouseSystem
 };
-var edge_pixi_systems_Renderer = function(renderer,stage) {
-	if(null != stage) this.stage = stage; else this.stage = new PIXI.Container();
+var edge_pixi_systems_Renderer = function(renderer,container) {
+	if(null == container) this.container = new PIXI.Container(); else this.container = container;
 	this.renderer = renderer;
 	this.__process__ = new edge_pixi_systems_Renderer_$SystemProcess(this);
 };
@@ -671,13 +681,13 @@ edge_pixi_systems_Renderer.__name__ = ["edge","pixi","systems","Renderer"];
 edge_pixi_systems_Renderer.__interfaces__ = [edge_ISystem];
 edge_pixi_systems_Renderer.prototype = {
 	entitiesAdded: function(e,data) {
-		this.stage.addChild(data.d.node);
+		this.container.addChild(data.d.node);
 	}
 	,entitiesRemoved: function(e,data) {
-		this.stage.removeChild(data.d.node);
+		this.container.removeChild(data.d.node);
 	}
 	,update: function() {
-		this.renderer.render(this.stage);
+		this.renderer.render(this.container);
 		return true;
 	}
 	,toString: function() {
@@ -1114,7 +1124,7 @@ var ledge_Game = function(renderer) {
 	this.render = this.world.render;
 	this.frame = this.world.frame;
 	this.renderer = new edge_pixi_systems_Renderer(renderer);
-	this.stage = this.renderer.stage;
+	this.stage = this.renderer.container;
 	this.addEnitities();
 	this.addSystems();
 	this.world.start();
@@ -18105,46 +18115,6 @@ thx_Arrays.rotate = function(arr) {
 	}
 	return result;
 };
-thx_Arrays.zip = function(array1,array2) {
-	var length = thx_Ints.min(array1.length,array2.length);
-	var array = [];
-	var _g = 0;
-	while(_g < length) {
-		var i = _g++;
-		array.push({ _0 : array1[i], _1 : array2[i]});
-	}
-	return array;
-};
-thx_Arrays.zip3 = function(array1,array2,array3) {
-	var length = thx_ArrayInts.min([array1.length,array2.length,array3.length]);
-	var array = [];
-	var _g = 0;
-	while(_g < length) {
-		var i = _g++;
-		array.push({ _0 : array1[i], _1 : array2[i], _2 : array3[i]});
-	}
-	return array;
-};
-thx_Arrays.zip4 = function(array1,array2,array3,array4) {
-	var length = thx_ArrayInts.min([array1.length,array2.length,array3.length,array4.length]);
-	var array = [];
-	var _g = 0;
-	while(_g < length) {
-		var i = _g++;
-		array.push({ _0 : array1[i], _1 : array2[i], _2 : array3[i], _3 : array4[i]});
-	}
-	return array;
-};
-thx_Arrays.zip5 = function(array1,array2,array3,array4,array5) {
-	var length = thx_ArrayInts.min([array1.length,array2.length,array3.length,array4.length,array5.length]);
-	var array = [];
-	var _g = 0;
-	while(_g < length) {
-		var i = _g++;
-		array.push({ _0 : array1[i], _1 : array2[i], _2 : array3[i], _3 : array4[i], _4 : array5[i]});
-	}
-	return array;
-};
 thx_Arrays.unzip = function(array) {
 	var a1 = [];
 	var a2 = [];
@@ -18192,6 +18162,46 @@ thx_Arrays.unzip5 = function(array) {
 		a5.push(t._4);
 	});
 	return { _0 : a1, _1 : a2, _2 : a3, _3 : a4, _4 : a5};
+};
+thx_Arrays.zip = function(array1,array2) {
+	var length = thx_Ints.min(array1.length,array2.length);
+	var array = [];
+	var _g = 0;
+	while(_g < length) {
+		var i = _g++;
+		array.push({ _0 : array1[i], _1 : array2[i]});
+	}
+	return array;
+};
+thx_Arrays.zip3 = function(array1,array2,array3) {
+	var length = thx_ArrayInts.min([array1.length,array2.length,array3.length]);
+	var array = [];
+	var _g = 0;
+	while(_g < length) {
+		var i = _g++;
+		array.push({ _0 : array1[i], _1 : array2[i], _2 : array3[i]});
+	}
+	return array;
+};
+thx_Arrays.zip4 = function(array1,array2,array3,array4) {
+	var length = thx_ArrayInts.min([array1.length,array2.length,array3.length,array4.length]);
+	var array = [];
+	var _g = 0;
+	while(_g < length) {
+		var i = _g++;
+		array.push({ _0 : array1[i], _1 : array2[i], _2 : array3[i], _3 : array4[i]});
+	}
+	return array;
+};
+thx_Arrays.zip5 = function(array1,array2,array3,array4,array5) {
+	var length = thx_ArrayInts.min([array1.length,array2.length,array3.length,array4.length,array5.length]);
+	var array = [];
+	var _g = 0;
+	while(_g < length) {
+		var i = _g++;
+		array.push({ _0 : array1[i], _1 : array2[i], _2 : array3[i], _3 : array4[i], _4 : array5[i]});
+	}
+	return array;
 };
 var thx_ArrayFloats = function() { };
 thx_ArrayFloats.__name__ = ["thx","ArrayFloats"];
@@ -61501,11 +61511,11 @@ thx_Floats.pattern_parse = new EReg("^(\\+|-)?\\d+(\\.\\d+)?(e-?\\d+)?$","");
 thx_Ints.pattern_parse = new EReg("^[+-]?(\\d+|0x[0-9A-F]+)$","i");
 thx_Ints.BASE = "0123456789abcdefghijklmnopqrstuvwxyz";
 thx_Strings.UCWORDS = new EReg("[^a-zA-Z]([a-z])","g");
-thx_Strings.UCWORDSWS = new EReg("\\s[a-z]","g");
+thx_Strings.UCWORDSWS = new EReg("[ \t\r\n][a-z]","g");
 thx_Strings.ALPHANUM = new EReg("^[a-z0-9]+$","i");
 thx_Strings.DIGITS = new EReg("^[0-9]+$","");
-thx_Strings.STRIPTAGS = new EReg("</?[a-z]+[^>]*?/?>","gi");
-thx_Strings.WSG = new EReg("\\s+","g");
+thx_Strings.STRIPTAGS = new EReg("</?[a-z]+[^>]*>","gi");
+thx_Strings.WSG = new EReg("[ \t\r\n]+","g");
 thx_Strings.SPLIT_LINES = new EReg("\r\n|\n\r|\n|\r","g");
 thx_Timer.FRAME_RATE = Math.round(16.6666666666666679);
 thx_color__$Grey_Grey_$Impl_$.black = 0;

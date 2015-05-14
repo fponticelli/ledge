@@ -30,7 +30,7 @@ class Game {
     render  = world.render;
     frame   = world.frame;
     this.renderer = new Renderer(renderer);
-    stage   = this.renderer.stage;
+    stage   = this.renderer.container;
 
     addEnitities();
     addSystems();
