@@ -618,6 +618,18 @@ edge_core_NodeSystemIterator.prototype = {
 	}
 	,__class__: edge_core_NodeSystemIterator
 };
+var edge_pixi_components_Camera = function(x,y) {
+	this.x = x;
+	this.y = y;
+};
+edge_pixi_components_Camera.__name__ = ["edge","pixi","components","Camera"];
+edge_pixi_components_Camera.__interfaces__ = [edge_IComponent];
+edge_pixi_components_Camera.prototype = {
+	toString: function(x,y) {
+		return "Camera(x=$x,y=$y)";
+	}
+	,__class__: edge_pixi_components_Camera
+};
 var edge_pixi_components_Display = function(node) {
 	this.node = node;
 };
@@ -636,6 +648,25 @@ edge_pixi_components_Display.prototype = {
 		return "Display(node=$node)";
 	}
 	,__class__: edge_pixi_components_Display
+};
+var edge_pixi_components_Widget = function(node) {
+	this.node = node;
+};
+edge_pixi_components_Widget.__name__ = ["edge","pixi","components","Widget"];
+edge_pixi_components_Widget.__interfaces__ = [edge_IComponent];
+edge_pixi_components_Widget.fromImagePath = function(path,anchorx,anchory) {
+	if(anchory == null) anchory = 0.0;
+	if(anchorx == null) anchorx = 0.0;
+	var sprite = new PIXI.Sprite(PIXI.Texture.fromImage(path));
+	sprite.anchor.x = anchorx;
+	sprite.anchor.y = anchory;
+	return new edge_pixi_components_Widget(sprite);
+};
+edge_pixi_components_Widget.prototype = {
+	toString: function(node) {
+		return "Widget(node=$node)";
+	}
+	,__class__: edge_pixi_components_Widget
 };
 var edge_pixi_cosystems_MouseSystem = function(stage) {
 	this.stage = stage;
@@ -671,6 +702,67 @@ edge_pixi_cosystems_MouseSystem.prototype = {
 		this.isDown = false;
 	}
 	,__class__: edge_pixi_cosystems_MouseSystem
+};
+var edge_pixi_systems_PositionCamera = function() {
+	this.__process__ = new edge_pixi_systems_PositionCamera_$SystemProcess(this);
+};
+edge_pixi_systems_PositionCamera.__name__ = ["edge","pixi","systems","PositionCamera"];
+edge_pixi_systems_PositionCamera.__interfaces__ = [edge_ISystem];
+edge_pixi_systems_PositionCamera.prototype = {
+	update: function(c,w) {
+		w.node.x = -c.x;
+		w.node.y = -c.y;
+		return true;
+	}
+	,toString: function() {
+		return "edge.pixi.systems.PositionCamera";
+	}
+	,__class__: edge_pixi_systems_PositionCamera
+};
+var edge_pixi_systems_PositionCamera_$SystemProcess = function(system) {
+	this.system = system;
+	this.updateItems = new edge_View();
+};
+edge_pixi_systems_PositionCamera_$SystemProcess.__name__ = ["edge","pixi","systems","PositionCamera_SystemProcess"];
+edge_pixi_systems_PositionCamera_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
+edge_pixi_systems_PositionCamera_$SystemProcess.prototype = {
+	removeEntity: function(entity) {
+		this.updateItems.tryRemove(entity);
+	}
+	,addEntity: function(entity) {
+		this.updateMatchRequirements(entity);
+	}
+	,update: function(engine,delta) {
+		var result = true;
+		var data;
+		var $it0 = this.updateItems.iterator();
+		while( $it0.hasNext() ) {
+			var item = $it0.next();
+			data = item.data;
+			result = this.system.update(data.c,data.w);
+			if(!result) break;
+		}
+		return result;
+	}
+	,updateMatchRequirements: function(entity) {
+		var removed = this.updateItems.tryRemove(entity);
+		var count = 2;
+		var o = { c : null, w : null};
+		var $it0 = entity.map.iterator();
+		while( $it0.hasNext() ) {
+			var component = $it0.next();
+			if(js_Boot.__instanceof(component,edge_pixi_components_Camera)) {
+				o.c = component;
+				if(--count == 0) break; else continue;
+			}
+			if(js_Boot.__instanceof(component,edge_pixi_components_Widget)) {
+				o.w = component;
+				if(--count == 0) break; else continue;
+			}
+		}
+		var added = count == 0 && this.updateItems.tryAdd(entity,o);
+	}
+	,__class__: edge_pixi_systems_PositionCamera_$SystemProcess
 };
 var edge_pixi_systems_Renderer = function(renderer,container) {
 	if(null == container) this.container = new PIXI.Container(); else this.container = container;
@@ -731,6 +823,66 @@ edge_pixi_systems_Renderer_$SystemProcess.prototype = {
 		if(added && null == removed) this.system.entitiesAdded(entity,o);
 	}
 	,__class__: edge_pixi_systems_Renderer_$SystemProcess
+};
+var edge_pixi_systems_UIRenderer = function(renderer,container) {
+	if(null == container) this.container = new PIXI.Container(); else this.container = container;
+	this.renderer = renderer;
+	this.__process__ = new edge_pixi_systems_UIRenderer_$SystemProcess(this);
+};
+edge_pixi_systems_UIRenderer.__name__ = ["edge","pixi","systems","UIRenderer"];
+edge_pixi_systems_UIRenderer.__interfaces__ = [edge_ISystem];
+edge_pixi_systems_UIRenderer.prototype = {
+	entitiesAdded: function(e,data) {
+		this.container.addChild(data.d.node);
+	}
+	,entitiesRemoved: function(e,data) {
+		this.container.removeChild(data.d.node);
+	}
+	,update: function() {
+		this.renderer.render(this.container);
+		return true;
+	}
+	,toString: function() {
+		return "edge.pixi.systems.UIRenderer";
+	}
+	,__class__: edge_pixi_systems_UIRenderer
+};
+var edge_pixi_systems_UIRenderer_$SystemProcess = function(system) {
+	this.system = system;
+	system.entities = new edge_View();
+};
+edge_pixi_systems_UIRenderer_$SystemProcess.__name__ = ["edge","pixi","systems","UIRenderer_SystemProcess"];
+edge_pixi_systems_UIRenderer_$SystemProcess.__interfaces__ = [edge_core_ISystemProcess];
+edge_pixi_systems_UIRenderer_$SystemProcess.prototype = {
+	removeEntity: function(entity) {
+		var removed = this.system.entities.tryRemove(entity);
+		if(removed != null) this.system.entitiesRemoved(entity,removed);
+	}
+	,addEntity: function(entity) {
+		this.entitiesMatchRequirements(entity);
+	}
+	,update: function(engine,delta) {
+		var result = true;
+		result = this.system.update();
+		return result;
+	}
+	,entitiesMatchRequirements: function(entity) {
+		var removed = this.system.entities.tryRemove(entity);
+		var count = 1;
+		var o = { d : null};
+		var $it0 = entity.map.iterator();
+		while( $it0.hasNext() ) {
+			var component = $it0.next();
+			if(js_Boot.__instanceof(component,edge_pixi_components_Widget)) {
+				o.d = component;
+				if(--count == 0) break; else continue;
+			}
+		}
+		var added = count == 0 && this.system.entities.tryAdd(entity,o);
+		if(null != removed && !added) this.system.entitiesRemoved(entity,removed);
+		if(added && null == removed) this.system.entitiesAdded(entity,o);
+	}
+	,__class__: edge_pixi_systems_UIRenderer_$SystemProcess
 };
 var haxe_StackItem = { __ename__ : true, __constructs__ : ["CFunction","Module","FilePos","Method","LocalFunction"] };
 haxe_StackItem.CFunction = ["CFunction",0];
@@ -1106,7 +1258,7 @@ js_Boot.__isNativeObj = function(o) {
 	return js_Boot.__nativeClassName(o) != null;
 };
 js_Boot.__resolveNativeClass = function(name) {
-	if(typeof window != "undefined") return window[name]; else return global[name];
+	return (Function("return typeof " + name + " != \"undefined\" ? " + name + " : null"))();
 };
 var thx_StaticResource = function() { };
 thx_StaticResource.__name__ = ["thx","StaticResource"];
@@ -1117,16 +1269,26 @@ ledge_Config.init = function() {
 	ledge_Config.stage.resolution = window.devicePixelRatio;
 };
 var ledge_Game = function(renderer) {
+	var _g = this;
 	this.world = new edge_World();
 	this.engine = this.world.engine;
 	this.turn = this.engine.createPhase();
 	this.physics = this.world.physics;
 	this.render = this.world.render;
 	this.frame = this.world.frame;
-	this.renderer = new edge_pixi_systems_Renderer(renderer);
-	this.stage = this.renderer.container;
+	this.stage = new PIXI.Container();
+	this.gameWorld = new PIXI.Container();
+	this.hud = new PIXI.Container();
+	this.gameWorldRendering = new edge_pixi_systems_Renderer(renderer,this.gameWorld);
+	this.hudRendering = new edge_pixi_systems_UIRenderer(renderer,this.hud);
+	this.stage.addChild(this.hud);
+	this.hud.addChild(this.gameWorld);
 	this.addEnitities();
 	this.addSystems();
+	thx_Timer.repeat(function() {
+		_g.cam.x++;
+		_g.cam.y++;
+	},50);
 	this.world.start();
 };
 ledge_Game.__name__ = ["ledge","Game"];
@@ -1149,12 +1311,14 @@ ledge_Game.prototype = {
 		text.anchor.set(0.5,0.5);
 		container.x = x;
 		container.y = y;
-		return this.engine.create([new edge_pixi_components_Display(container),new ledge_components_Button(handler,w,h)]);
+		return this.engine.create([new edge_pixi_components_Widget(container),new ledge_components_Button(handler,w,h)]);
 	}
 	,addEnitities: function() {
+		this.cam = new edge_pixi_components_Camera(0,0);
 		this.createWarrior(100,100);
 		this.createWarrior(500,200);
 		this.createWarrior(300,500);
+		this.engine.create([this.cam,new edge_pixi_components_Widget(this.gameWorld)]);
 		this.createButton(720,30,"click me",$bind(this,this.startResolution));
 	}
 	,startResolution: function() {
@@ -1178,8 +1342,10 @@ ledge_Game.prototype = {
 		this.ui.add(new ledge_systems_RenderWaypoints(this.stage));
 		this.ui.add(new ledge_systems_RenderSelected(this.stage));
 		this.render.add(new ledge_systems_PhysicsDisplayUpdate());
-		this.render.add(new ledge_systems_PhysicsDebugRenderer(this.stage));
-		this.render.add(this.renderer);
+		this.render.add(new ledge_systems_PhysicsDebugRenderer(this.gameWorld));
+		this.render.add(this.gameWorldRendering);
+		this.render.add(this.hudRendering);
+		this.render.add(new edge_pixi_systems_PositionCamera());
 	}
 	,__class__: ledge_Game
 };

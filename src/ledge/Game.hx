@@ -21,7 +21,12 @@ class Game {
   var render : Phase;
   var ui : Phase;
   var resolution : Phase;
-  var renderer : Renderer;
+  var gameWorld : Container;
+  var hud : Container;
+  var cam : Camera;
+  var gameWorldRendering : Renderer;
+  var hudRendering : UIRenderer;
+
   public function new(renderer : SystemRenderer) {
     world   = new World();
     engine  = world.engine;
@@ -29,11 +34,24 @@ class Game {
     physics = world.physics;
     render  = world.render;
     frame   = world.frame;
-    this.renderer = new Renderer(renderer);
-    stage   = this.renderer.container;
+    stage   = new Container();
+    gameWorld = new Container();
+    hud = new Container();
+    gameWorldRendering = new Renderer(renderer, gameWorld);
+    hudRendering = new UIRenderer(renderer, hud);
+
+
+    stage.addChild(hud);
+    hud.addChild(gameWorld);
+
 
     addEnitities();
     addSystems();
+
+    thx.Timer.repeat(function () {
+      cam.x++;
+      cam.y++;
+    }, 50);
 
     // run
     world.start();
@@ -70,15 +88,21 @@ class Game {
     container.x = x;
     container.y = y;
     return engine.create([
-        new Display(container),
+        new Widget(container),
         new Button(handler, w, h)
       ]);
   }
 
   public function addEnitities() {
+    cam = new Camera(0, 0);
     createWarrior(100, 100);
     createWarrior(500, 200);
     createWarrior(300, 500);
+
+    engine.create([
+      cam,
+      new Widget(gameWorld)
+    ]);
 
     createButton(
       720, 30,
@@ -116,7 +140,9 @@ class Game {
     ui.add(new RenderSelected(stage));
 
     render.add(new PhysicsDisplayUpdate());
-    render.add(new PhysicsDebugRenderer(stage));
-    render.add(renderer);
+    render.add(new PhysicsDebugRenderer(gameWorld));
+    render.add(gameWorldRendering);
+    render.add(hudRendering);
+    render.add(new PositionCamera());
   }
 }
