@@ -7,6 +7,7 @@ import pixi.core.display.Container;
 import pixi.core.graphics.Graphics;
 import nape.shape.Shape;
 using thx.Arrays;
+using thx.Functions;
 import thx.color.Hsl;
 
 class PhysicsDebugRenderer implements ISystem {
@@ -24,7 +25,7 @@ class PhysicsDebugRenderer implements ISystem {
     var color = Hsl.create(Math.random() * 360, 0.9, 0.3).toRgb();
     g.lineStyle(1, color, 1);
     g.beginFill(color.lighter(0.5), 0.75);
-    data.structure.shapes.pluck(render(g, _));
+    data.structure.shapes.map.fn(render(g, _));
     g.endFill();
   }
 
